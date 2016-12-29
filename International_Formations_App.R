@@ -210,7 +210,7 @@ simpleCap <- function(x) {
 # Apply simpleCap function to NNPWords column so the first letter of every word is capitalized.
 FormationData[,"NNPWords"]<-sapply(FormationData[,"NNPWords"], simpleCap)
     
-#STEP TWELVE: Remove all characters after "Formation" or "Formations" in NNPWords column
+# STEP TWELVE: Remove all characters after "Formation" or "Formations" in NNPWords column
 print(paste(" Remove all characters after 'Formation' or 'Formations'",Sys.time()))
     
 # ACCOUNT FOR THE FRENCH EXCEPTIONS WHERE WE WOULD NOT WANT TO REMOVE CHARACTERS AFTER FORMATIONS
@@ -235,16 +235,27 @@ Singular<-SingularWithFrench[which(!SingularWithFrench%in%FrenchRows)]
 FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
 FormationData[Singular,"NNPWords"]<-FormationCut
     
+# STEP THIRTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+FormationData<-Formationdata[-(which(FormationData[,"NNPWords"]=="Formation"),]
+                               
+# RECORD STATS
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
+StepThirteenDescription<-"Remove rows that are just 'Formation'"
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+StepThirteenDocs<-length(unique(FormationData[,"docid"]))
+StepThirteenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+StepThirteenClusters<-nrow(FormationData)                               
+                               
 # Extract columns of interest for the output
 FormationData<-FormationData[,c("ClusterPosition","docid","sentid","NNPWords")]
    
 print(paste("Writing Outputs",Sys.time()))
 
 # Return stats table 
-StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription)
-NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs)
-NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTenRows)
-NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters) 
+StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription)
+NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs, StepThirteenDocs)
+NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTenRows, StepThirteenRows)
+NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters, StepThirteenClusters) 
 # Bind Stats Columns
 Stats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)    
 
