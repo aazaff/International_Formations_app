@@ -206,9 +206,34 @@ simpleCap <- function(x) {
   paste(toupper(substring(s, 1,1)), substring(s, 2),
       sep="", collapse=" ")
 }
-
+    
 # Apply simpleCap function to NNPWords column so the first letter of every word is capitalized.
 FormationData[,"NNPWords"]<-sapply(FormationData[,"NNPWords"], simpleCap)
+    
+#STEP TWELVE: Remove all characters after "Formation" or "Formations" in NNPWords column
+print(paste(" Remove all characters after 'Formation' or 'Formations'",Sys.time()))
+    
+# ACCOUNT FOR THE FRENCH EXCEPTIONS WHERE WE WOULD NOT WANT TO REMOVE CHARACTERS AFTER FORMATIONS
+Des<-grep("Des",FormationData[,"NNPWords"], perl=TRUE, ignore.case=TRUE)
+Les<-grep("Les",FormationData[,"NNPWords"], perl=TRUE, ignore.case=TRUE)
+FrenchRows<-c(Des,Les)
+    
+# Extract FormationData NNPWords with "Formations" NNP clusters
+PluralWithFrench<-grep("Formations",FormationData[,"NNPWords"], perl=TRUE, ignore.case=TRUE)
+# Make sure character removal is not performed on french rows
+Plural<-PluralWithFrench[which(!PluralWithFrench%in%FrenchRows)]
+# Replace (non-french) plural rows of NNPWords column with version with characters after "formations" removed
+FormationsCut<-gsub("(Formations).*","\\1",FormationData[Plural,"NNPWords"])
+FormationData[Plural,"NNPWords"]<-FormationsCut
+    
+# Extract FormationData NNPWords with "Formation" NNP clusters
+# Find the FormationData NNPWords rows with "Formation" NNP clusters (NON PLURALS)
+SingularWithFrench<-which(!1:nrow(FormationData)%in%Plural)
+# Make sure character removal is not performed on french rows
+Singular<-SingularWithFrench[which(!SingularWithFrench%in%FrenchRows)]
+# Replace (non-french) singular rows of NNPWords column with version with characters after "formation" removed
+FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
+FormationData[Singular,"NNPWords"]<-FormationCut
     
 # Extract columns of interest for the output
 FormationData<-FormationData[,c("ClusterPosition","docid","sentid","NNPWords")]
