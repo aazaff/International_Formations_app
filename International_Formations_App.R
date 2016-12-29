@@ -178,12 +178,12 @@ StepNineDocs<-length(unique(FormationData[,"docid"]))
 StepNineRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 StepNineClusters<-nrow(FormationData)
     
-# STEP TEN: Remove Formations that are more than 5 words in length.
-print(paste("Remove Formations > 5 words in length",Sys.time()))
+# STEP TEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
+print(paste("Remove Formations > 5 or = 1 word(s) in length",Sys.time()))
 # Determine the number of words in each NNPWords row
 WordLength<-sapply(sapply(FormationData[,"ClusterPosition"], function(x) strsplit(x, ",")), function(x) length(x))
-# Determine which rows have more than 5 NNPWords
-BadFormations<-which(WordLength>5)
+# Determine which rows have more than 5 NNPWords or only 1 NNPWord
+BadFormations<-which(WordLength>5|WordLength==1)
 # Remove those rows from FormationData
 FormationData<-FormationData[-BadFormations,]
 
