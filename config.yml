@@ -1,8 +1,8 @@
 # The name of the application (no spaces)
-app_name: PBDB_Fidelity
+app_name: International_Formations_App
 
 # A brief description of the app.
-description : Identifying fossiliferous stratigraphic units not identified as fossiliferous according to the paleobiology database.
+description : Identifying international geologic formations.
 
 # Your first and last name
 user: Erika Ito
@@ -23,7 +23,6 @@ frequency: once
 # You can choose to specify a list of dictionaries, a list of terms, or both.
 # If both dictionaries and terms are provided, all terms in the dictionary PLUS
 # all listed terms will be used
-dictionaries: PBDB and Macrostrat units
 
 # A list of terms used to subset the corpus
 
