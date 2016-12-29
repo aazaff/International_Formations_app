@@ -194,7 +194,22 @@ StepTenDescription<-"Remove Formations > 5 words in length"
 StepTenDocs<-length(unique(FormationData[,"docid"]))
 StepTenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 StepTenClusters<-nrow(FormationData)
+    
+# STEP ELEVEN: Format formation names to have all of the same capitalization patterns.
+print(paste("Capitalize formation names appropriately",Sys.time())) 
+# First, make all characters in the NNPWords column lower case
+FormationData[,"NNPWords"]<-tolower(FormationData[,"NNPWords"])
+# Second, capitalize the first letter of each word in the NNPWords column
+# Capitalization function:
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
 
+# Apply simpleCap function to NNPWords column so the first letter of every word is capitalized.
+FormationData[,"NNPWords"]<-sapply(FormationData[,"NNPWords"], simpleCap)
+    
 # Extract columns of interest for the output
 FormationData<-FormationData[,c("ClusterPosition","docid","sentid","NNPWords")]
    
