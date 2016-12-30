@@ -236,21 +236,22 @@ FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
 FormationData[Singular,"NNPWords"]<-FormationCut
     
 # STEP THIRTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
-FormationData<-Formationdata[-(which(FormationData[,"NNPWords"]=="Formation"),]
+FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
                                
 # RECORD STATS
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepThirteenDescription<-"Remove rows that are just 'Formation'"
+StepThirteenDescription<-"Remove rows that are just the word 'Formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepThirteenDocs<-length(unique(FormationData[,"docid"]))
 StepThirteenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 StepThirteenClusters<-nrow(FormationData)                               
-                               
+
+# STEP FOURTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+print(paste("Writing Outputs",Sys.time()))
+     
 # Extract columns of interest for the output
 FormationData<-FormationData[,c("ClusterPosition","docid","sentid","NNPWords")]
    
-print(paste("Writing Outputs",Sys.time()))
-
 # Return stats table 
 StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription)
 NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs, StepThirteenDocs)
@@ -273,5 +274,6 @@ write.csv(Stats, "Stats.csv")
     
 # Stop the cluster
 stopCluster(Cluster)
-      
+
+# COMPLETE
 print(paste("Complete",Sys.time())) 
