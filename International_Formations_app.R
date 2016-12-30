@@ -291,7 +291,7 @@ FormationData<-FormationData[,c("Formation","ClusterPosition","docid","sentid")]
 StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription, StepFourteenDescription)
 NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs, StepThirteenDocs, StepFourteenDocs)
 NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTenRows, StepThirteenRows, StepFourteenRows)
-NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters, StepFourteenClusters) 
+NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters, StepThirteenClusters, StepFourteenClusters) 
 # Bind Stats Columns
 Stats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)    
 
