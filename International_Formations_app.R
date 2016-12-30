@@ -89,7 +89,7 @@ doc.sent<-paste(SubsetDeepDive[,"docid"],SubsetDeepDive[,"sentid"],sep=".")
 names(DeepDivePoses)<-doc.sent
 
 # Extract all the NNPs from DeepDivePoses
-DeepDiveNNPs<-sapply(DeepDivePoses,function(x) which(x=="NNP"))
+DeepDiveNNPs<-sapply(DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
     
 # STEP SEVEN: Find consecutive NNPs in DeepDiveNNPs
 print(paste("Find consecutive NNPs in DeepDiveNNPs",Sys.time()))
