@@ -279,7 +279,7 @@ StepFourteenDescription<-"Remove Formations > 5 words in length"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepFourteenDocs<-length(unique(FormationData[,"docid"]))
 StepFourteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
-StepFourteenClusters<-nrow(FormationData)    
+StepFourteenClusters<-nrow(FormationData) 
 
 # STEP FIFTEEN: Clean FormationData
 print(paste("Clean FormationData",Sys.time()))
@@ -287,6 +287,8 @@ print(paste("Clean FormationData",Sys.time()))
 FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both"))
 # Remove double spaces in the formation column
 FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
+# Remove s in "Formations" where necessary
+FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
     
 # STEP SIXTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
 print(paste("Writing Outputs",Sys.time()))
