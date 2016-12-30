@@ -179,24 +179,7 @@ StepNineDocs<-length(unique(FormationData[,"docid"]))
 StepNineRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 StepNineClusters<-nrow(FormationData)
     
-# STEP TEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
-print(paste("Remove Formations > 5 or = 1 word(s) in length",Sys.time()))
-# Determine the number of words in each NNPWords row
-WordLength<-sapply(sapply(FormationData[,"ClusterPosition"], function(x) strsplit(x, ",")), function(x) length(x))
-# Determine which rows have more than 5 NNPWords or only 1 NNPWord
-BadFormations<-which(WordLength>5|WordLength==1)
-# Remove those rows from FormationData
-FormationData<-FormationData[-BadFormations,]
-
-# RECORD STATS
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepTenDescription<-"Remove Formations > 5 words in length"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepTenDocs<-length(unique(FormationData[,"docid"]))
-StepTenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-StepTenClusters<-nrow(FormationData)
-    
-# STEP ELEVEN: Format formation names to have all of the same capitalization patterns.
+# STEP TEN: Format formation names to have all of the same capitalization patterns.
 print(paste("Capitalize formation names appropriately",Sys.time())) 
 # First, make all characters in the NNPWords column lower case
 FormationData[,"NNPWords"]<-tolower(FormationData[,"NNPWords"])
@@ -211,7 +194,7 @@ simpleCap <- function(x) {
 # Apply simpleCap function to NNPWords column so the first letter of every word is capitalized.
 FormationData[,"NNPWords"]<-sapply(FormationData[,"NNPWords"], simpleCap)
     
-# STEP TWELVE: Remove all characters after "Formation" or "Formations" in NNPWords column
+# STEP ELEVEN: Remove all characters after "Formation" or "Formations" in NNPWords column
 print(paste(" Remove all characters after 'Formation' or 'Formations'",Sys.time()))
     
 # ACCOUNT FOR THE FRENCH EXCEPTIONS WHERE WE WOULD NOT WANT TO REMOVE CHARACTERS AFTER FORMATIONS
@@ -236,19 +219,19 @@ Singular<-SingularWithFrench[which(!SingularWithFrench%in%FrenchRows)]
 FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
 FormationData[Singular,"NNPWords"]<-FormationCut
     
-# STEP THIRTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+# STEP TWELVE: Remove FormationData rows which only have "Formation" in the NNPWords column
 print(paste("Capitalize formation names appropriately",Sys.time())) 
 FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
  
 # RECORD STATS
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepThirteenDescription<-"Remove rows that are just the word 'Formation'"
+StepTwelveDescription<-"Remove rows that are just the word 'Formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepThirteenDocs<-length(unique(FormationData[,"docid"]))
-StepThirteenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-StepThirteenClusters<-nrow(FormationData)        
+StepTwelveDocs<-length(unique(FormationData[,"docid"]))
+StepTwelveRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+StepTwelveClusters<-nrow(FormationData)        
        
-# STEP FOURTEEN: Split the NNPClusters where there is an "And"
+# STEP THIRTEEN: Split the NNPClusters where there is an "And"
 SplitFormations<-strsplit(FormationData[,"NNPWords"],'And')
 # Remove the blanks created by the splitting
 SplitFormationsClean<-sapply(SplitFormations,function(x) unlist(x)[unlist(x)!=""])   
@@ -275,11 +258,28 @@ FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalve
     
 # RECORD STATS
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepFourteenDescription<-"Split NNPClusters at 'And'"
+StepThirteenDescription<-"Split NNPClusters at 'And'"
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+StepThirteenDocs<-length(unique(FormationData[,"docid"]))
+StepThirteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
+StepThirteenClusters<-nrow(FormationData)
+  
+# STEP FOURTEEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
+print(paste("Remove Formations > 5 or = 1 word(s) in length",Sys.time()))
+# Determine the number of words in each NNPWords row
+WordLength<-sapply(sapply(FormationData[,"ClusterPosition"], function(x) strsplit(x, ",")), function(x) length(x))
+# Determine which rows have more than 5 NNPWords or only 1 NNPWord
+BadFormations<-which(WordLength>5|WordLength==1)
+# Remove those rows from FormationData
+FormationData<-FormationData[-BadFormations,]
+
+# RECORD STATS
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
+StepFourteenDescription<-"Remove Formations > 5 words in length"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepFourteenDocs<-length(unique(FormationData[,"docid"]))
 StepFourteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
-StepFourteenClusters<-nrow(FormationData)
+StepFourteenClusters<-nrow(FormationData)    
     
 # STEP FIFTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
 print(paste("Writing Outputs",Sys.time()))
@@ -288,10 +288,10 @@ print(paste("Writing Outputs",Sys.time()))
 FormationData<-FormationData[,c("Formation","ClusterPosition","docid","sentid")]
    
 # Return stats table 
-StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription, StepFourteenDescription)
-NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs, StepThirteenDocs, StepFourteenDocs)
-NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTenRows, StepThirteenRows, StepFourteenRows)
-NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters, StepThirteenClusters, StepFourteenClusters) 
+StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTwelveDescription, StepThirteenDescription, StepFourteenDescription)
+NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTwelveDocs, StepThirteenDocs, StepFourteenDocs)
+NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTwelveRows, StepThirteenRows, StepFourteenRows)
+NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTwelveClusters, StepThirteenClusters, StepFourteenClusters) 
 # Bind Stats Columns
 Stats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)    
 
