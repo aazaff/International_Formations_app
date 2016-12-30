@@ -280,12 +280,19 @@ StepFourteenDescription<-"Remove Formations > 5 words in length"
 StepFourteenDocs<-length(unique(FormationData[,"docid"]))
 StepFourteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
 StepFourteenClusters<-nrow(FormationData)    
+
+# STEP FIFTEEN: Clean FormationData
+print(paste("Clean FormationData",Sys.time()))
+# Remove spaces at the beginning and/or end of the Formation column where necessary
+FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both"))
+# Remove double spaces in the formation column
+FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
     
-# STEP FIFTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+# STEP SIXTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
-FormationData<-FormationData[,c("Formation","ClusterPosition","docid","sentid")]
+FormationData<-FormationData[,c("Formation","docid","sentid")]
    
 # Return stats table 
 StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTwelveDescription, StepThirteenDescription, StepFourteenDescription)
