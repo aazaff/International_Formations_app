@@ -89,6 +89,7 @@ doc.sent<-paste(SubsetDeepDive[,"docid"],SubsetDeepDive[,"sentid"],sep=".")
 names(DeepDivePoses)<-doc.sent
 
 # Extract all the NNPs from DeepDivePoses
+# NOTE: Search for CC as to get hits like "Middendorf And Black Creek Formations" which is NNP, CC, NNP, NNP, NNP
 DeepDiveNNPs<-sapply(DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
     
 # STEP SEVEN: Find consecutive NNPs in DeepDiveNNPs
@@ -236,21 +237,47 @@ FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
 FormationData[Singular,"NNPWords"]<-FormationCut
     
 # STEP THIRTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+print(paste("Capitalize formation names appropriately",Sys.time())) 
 FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
-                               
+ 
 # RECORD STATS
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 StepThirteenDescription<-"Remove rows that are just the word 'Formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepThirteenDocs<-length(unique(FormationData[,"docid"]))
 StepThirteenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-StepThirteenClusters<-nrow(FormationData)                               
+StepThirteenClusters<-nrow(FormationData)        
+       
+# STEP FOURTEEN: Split the NNPClusters where there is an "And"
+SplitFormations<-strsplit(FormationData[,"NNPWords"],'And')
+# Remove the blanks created by the splitting
+SplitFormationsClean<-sapply(SplitFormations,function(x) unlist(x)[unlist(x)!=""])   
+# SplitFormations is a list of the split clusters. Figure out which clusters were split at "And" using length.
+SplitCount<-sapply(SplitFormationsClean,length)
+# Repeat the data in FormationData for each split cluster by its length
+ClusterPosition<-rep(FormationData[,"ClusterPosition"],times=SplitCount) 
+docid<-rep(FormationData[,"docid"],times=SplitCount) 
+sentid<-rep(FormationData[,"sentid"],times=SplitCount)
+# Make a column for the split formations
+Formation<-unlist(SplitFormationsClean)
+FormationData<-as.data.frame(cbind(Formation,ClusterPosition,docid,sentid))
+# Reformat data
+FormationData[,"Formation"]<-as.character(FormationData[,"Formation"])
+FormationData[,"ClusterPosition"]<-as.character(FormationData[,"ClusterPosition"])
+FormationData[,"docid"]<-as.character(FormationData[,"docid"])
+FormationData[,"sentid"]<-as.numeric(as.character(FormationData[,"sentid"]))
 
-# STEP FOURTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+# Paste "Formation" to the end of the split clusters where it is missing
+# Determine the split clusters that DO contain the word "Formation"
+FormationHalves<-grep("Formation",FormationData[,"Formation"], perl=TRUE, ignore.case=TRUE)
+# Paste "Formation" to all of the non FormationHalves rows
+FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
+    
+# STEP FIFTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
-FormationData<-FormationData[,c("ClusterPosition","docid","sentid","NNPWords")]
+FormationData<-FormationData[,c("Formation","ClusterPosition","docid","sentid")]
    
 # Return stats table 
 StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription)
