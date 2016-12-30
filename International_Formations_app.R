@@ -273,6 +273,14 @@ FormationHalves<-grep("Formation",FormationData[,"Formation"], perl=TRUE, ignore
 # Paste "Formation" to all of the non FormationHalves rows
 FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
     
+# RECORD STATS
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
+StepFourteenDescription<-"Split NNPClusters at 'And'"
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+StepFourteenDocs<-length(unique(FormationData[,"docid"]))
+StepFourteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
+StepFourteenClusters<-nrow(FormationData)
+    
 # STEP FIFTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
 print(paste("Writing Outputs",Sys.time()))
      
@@ -280,10 +288,10 @@ print(paste("Writing Outputs",Sys.time()))
 FormationData<-FormationData[,c("Formation","ClusterPosition","docid","sentid")]
    
 # Return stats table 
-StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription)
-NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs, StepThirteenDocs)
-NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTenRows, StepThirteenRows)
-NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters, StepThirteenClusters) 
+StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTenDescription, StepThirteenDescription, StepFourteenDescription)
+NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTenDocs, StepThirteenDocs, StepFourteenDocs)
+NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTenRows, StepThirteenRows, StepFourteenRows)
+NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTenClusters, , StepFourteenClusters) 
 # Bind Stats Columns
 Stats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)    
 
