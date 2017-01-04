@@ -246,7 +246,7 @@ sentid<-rep(FormationData[,"sentid"],times=SplitCount)
 Formation<-unlist(SplitFormationsClean)
 FormationData<-as.data.frame(cbind(Formation,SubsetDeepDiveRow,ClusterPosition,docid,sentid))
 # Reformat data
-FormationData[,"SubsetDeepDiveRow"]<-as.character(FormationData[,"SubsetDeepDiveRow"])
+FormationData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(FormationData[,"SubsetDeepDiveRow"]))
 FormationData[,"Formation"]<-as.character(FormationData[,"Formation"])
 FormationData[,"ClusterPosition"]<-as.character(FormationData[,"ClusterPosition"])
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
@@ -293,24 +293,51 @@ FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
    
 # STEP SIXTEEN: Search FormationData sentences for the word " fossil"
-# NOTE: Put a space in front of "fossil" for grep search to avoid hits for the word "unfossiliferous"
 print(paste("Search FormationData sentences for ' fossil'",Sys.time())) 
-FossilHits<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) grep(" fossil", SubsetDeepDive[x,"words"], perl=TRUE, ignore.case=TRUE)
+# NOTE: Put a space in front of "fossil" for grep search to avoid hits for the word "unfossiliferous"
+# Extract document sentences for associated FormationData rows
+FormationSentences<-SubsetDeepDive[FormationData[,"SubsetDeepDiveRow"],"words"]
+# Clean sentences to prepare for grep
+CleanedWords<-gsub(","," ",FormationSentences)
+FossilHits<-grep(" fossil", perl=TRUE, ignore.case=TRUE, CleanedWords)
     
-# STEP SEVENTEEN: Write outputs
+# STEP SEVENTEEN: Make data frame for fossil, formation sentences
+print(paste("Make data frame for fossil, formation sentences",Sys.time()))
+# Extract the formations from FormationData that co-occur in a sentence with " fossil"
+FossilData<-FormationData[FossilHits,]
+# Extract sentences with a formation and a fossil hit
+Sentence<-CleanedWords[FossilHits]
+# Bind those sentences to FossilData
+FossilData<-cbind(FossilData, Sentence)
+    
+# RECORD STATS
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
+StepSeventeenDescription<-"Extract document sentences with a formation and a fossil hit"
+# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+StepSeventeenDocs<-length(unique(FossilData[,"docid"]))
+StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
+    
+# STEP EIGHTEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
-#FormationData<-FormationData[,c("Formation","docid","sentid")]
-
+FormationData<-FormationData[,c("Formation","docid","sentid")]
+FossilData<-FossilData[,c("Formation","docid","sentid","Sentence")]
    
-# Return stats table 
+# Return formation stats table 
 StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTwelveDescription, StepThirteenDescription, StepFourteenDescription)
 NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTwelveDocs, StepThirteenDocs, StepFourteenDocs)
 NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTwelveRows, StepThirteenRows, StepFourteenRows)
 NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTwelveClusters, StepThirteenClusters, StepFourteenClusters) 
-# Bind Stats Columns
-Stats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)    
+# Bind formation stats columns
+FormationStats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)  
+
+# Return fossil stats table
+FossilSteps<-c(StepSeventeenDescription)
+FossilDocuments<-c(StepSeventeenDocs)
+FossilRows<-c(StepSeventeenRows)
+# Bind formation stats columns
+FossilStats<-cbind(FossilSteps,FossilDocuments,FossilRows,)  
 
 # Set directory for output
 CurrentDirectory<-getwd()
@@ -321,10 +348,11 @@ unlink("*")
 
 # Write output files
 saveRDS(FormationData, "FormationData.rds")
-saveRDS(FormationData, "SubsetDeepDive.rds")
-saveRDS(FormationData, "FossilHits.rds")
+saveRDS(FossilHits, "FossilData.rds")
 write.csv(FormationData, "FormationData.csv")
-write.csv(Stats, "Stats.csv")
+write.csv(FormationData, "FossilData.csv")
+write.csv(FormationStats, "FormationStats.csv")
+write.csv(FossilStats, "FossilStats.csv")
     
 # Stop the cluster
 stopCluster(Cluster)
