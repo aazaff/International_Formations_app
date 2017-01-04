@@ -238,13 +238,15 @@ SplitFormationsClean<-sapply(SplitFormations,function(x) unlist(x)[unlist(x)!=""
 # SplitFormations is a list of the split clusters. Figure out which clusters were split at "And" using length.
 SplitCount<-sapply(SplitFormationsClean,length)
 # Repeat the data in FormationData for each split cluster by its length
+SubsetDeepDiveRow<-rep(FormationData[,"SubsetDeepDiveRow"],time=SplitCount)
 ClusterPosition<-rep(FormationData[,"ClusterPosition"],times=SplitCount) 
 docid<-rep(FormationData[,"docid"],times=SplitCount) 
 sentid<-rep(FormationData[,"sentid"],times=SplitCount)
 # Make a column for the split formations
 Formation<-unlist(SplitFormationsClean)
-FormationData<-as.data.frame(cbind(Formation,ClusterPosition,docid,sentid))
+FormationData<-as.data.frame(cbind(Formation,SubsetDeepDiveRow,ClusterPosition,docid,sentid))
 # Reformat data
+FormationData[,"SubsetDeepDiveRow"]<-as.character(FormationData[,"SubsetDeepDiveRow"])
 FormationData[,"Formation"]<-as.character(FormationData[,"Formation"])
 FormationData[,"ClusterPosition"]<-as.character(FormationData[,"ClusterPosition"])
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
