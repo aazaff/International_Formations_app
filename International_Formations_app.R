@@ -337,7 +337,7 @@ FossilSteps<-c(StepSeventeenDescription)
 FossilDocuments<-c(StepSeventeenDocs)
 FossilRows<-c(StepSeventeenRows)
 # Bind formation stats columns
-FossilStats<-cbind(FossilSteps,FossilDocuments,FossilRows,)  
+FossilStats<-cbind(FossilSteps,FossilDocuments,FossilRows)  
 
 # Set directory for output
 CurrentDirectory<-getwd()
