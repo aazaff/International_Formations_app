@@ -263,7 +263,7 @@ FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalve
 StepThirteenDescription<-"Split NNPClusters at 'And'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepThirteenDocs<-length(unique(FormationData[,"docid"]))
-StepThirteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
+StepThirteenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 StepThirteenClusters<-nrow(FormationData)
   
 # STEP FOURTEEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
@@ -291,12 +291,18 @@ FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both")
 FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 # Remove s in "Formations" where necessary
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
+   
+# STEP SIXTEEN: Search FormationData sentences for the word " fossil"
+# NOTE: Put a space in front of "fossil" for grep search to avoid hits for the word "unfossiliferous"
+print(paste("Search FormationData sentences for ' fossil'",Sys.time())) 
+FossilHits<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) grep(" fossil", SubsetDeepDive[x,"words"], perl=TRUE, ignore.case=TRUE)
     
-# STEP SIXTEEN: Remove FormationData rows which only have "Formation" in the NNPWords column
+# STEP SEVENTEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
-FormationData<-FormationData[,c("Formation","docid","sentid")]
+#FormationData<-FormationData[,c("Formation","docid","sentid")]
+
    
 # Return stats table 
 StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTwelveDescription, StepThirteenDescription, StepFourteenDescription)
@@ -315,6 +321,8 @@ unlink("*")
 
 # Write output files
 saveRDS(FormationData, "FormationData.rds")
+saveRDS(FormationData, "SubsetDeepDive.rds")
+saveRDS(FormationData, "FossilHits.rds")
 write.csv(FormationData, "FormationData.csv")
 write.csv(Stats, "Stats.csv")
     
