@@ -319,7 +319,40 @@ StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
 
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
+# Load world cities data
+WorldCities<-read.csv("~/Documents/DeepDive/worldcities.csv")
+# Extract unique city names
+Cities<-unique(WorldCities[,"name"])
+# Extract FormationData SubsetDeepDive rows for grep search
+FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
+# Clean the sentences to prepare for grep
+CleanedWords<-gsub(","," ",FormationSentences)
 
+# Search for cities: 
+CityHits<-sapply(Cities, function(x) grep(x, perl=TRUE, ignore.case=TRUE, CleanedWords))
+# Assign names
+names(CitySearch)<-Cities
+# Determine which cities had matches 
+CityCheck<-sapply(CityHits, function(x) length(x)>0)
+# Extract those cities and their match data
+CityMatches<-CitySearch[which(CityCheck==TRUE)]
+# Extract sentences with cities in them, and their docid, sent id data
+CitySentence<-sapply(unlist(CityMatches), function(x) CleanedWords[x])
+CityDocid<-sapply(unlist(CityMatches), function(x) FormationData[x,"docid"])
+CitySentid<-sapply(unlist(CityMatches), function(x) FormationData[x,"sentid"])
+# Extract the formation associated with that city
+CityFormation<-sapply(unlist(CityMatches), function(x) FormationData[x,"Formation"])
+# Create a city name column
+CityCount<-sapply(CityMatches, length)
+CityName<-rep(names(CityMatches), times=CityCount)
+# Bind this data into a dataframe
+CityData<-as.data.frame(cbind(CityName,CityFormation,CityDocid,CitySentid,CitySentence))
+# Reformat CityData
+CityData[,"CityName"]<-as.character(CityData[,"CityName"])
+CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
+CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
+CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
+colnames(CityData)<-c("CityName","Formation","docid","sentid")
     
 # STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
