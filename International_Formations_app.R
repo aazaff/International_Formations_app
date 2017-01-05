@@ -291,7 +291,7 @@ FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both")
 FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 # Remove s in "Formations" where necessary
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
-   
+    
 # STEP SIXTEEN: Search FormationData sentences for the word " fossil"
 print(paste("Search FormationData sentences for ' fossil'",Sys.time())) 
 # NOTE: Put a space in front of "fossil" for grep search to avoid hits for the word "unfossiliferous"
@@ -316,8 +316,11 @@ StepSeventeenDescription<-"Extract document sentences with a formation and a fos
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepSeventeenDocs<-length(unique(FossilData[,"docid"]))
 StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
+
+# STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
+print(paste("Search for locations in FormationData sentences",Sys.time()))    
     
-# STEP EIGHTEEN: Write outputs
+# STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
@@ -349,6 +352,7 @@ unlink("*")
 # Write output files
 saveRDS(FormationData, "FormationData.rds")
 saveRDS(FossilHits, "FossilData.rds")
+saveRDS(SubsetDeepDive, "SubsetDeepDive.rds")
 write.csv(FormationData, "FormationData.csv")
 write.csv(FormationData, "FossilData.csv")
 write.csv(FormationStats, "FormationStats.csv")
