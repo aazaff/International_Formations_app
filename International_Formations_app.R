@@ -318,13 +318,14 @@ StepSeventeenDocs<-length(unique(FossilData[,"docid"]))
 StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
 
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
-print(paste("Search for locations in FormationData sentences",Sys.time()))    
+print(paste("Search for locations in FormationData sentences",Sys.time()))   
+
     
 # STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
-FormationData<-FormationData[,c("Formation","docid","sentid")]
+# FormationData<-FormationData[,c("Formation","docid","sentid")]
 FossilData<-FossilData[,c("Formation","docid","sentid","Sentence")]
    
 # Return formation stats table 
