@@ -321,6 +321,11 @@ StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
 # Load world cities data
 WorldCities<-read.csv("~/Documents/DeepDive/worldcities.csv")
+CountryCodes<-read.csv("~/Documents/DeepDive/International_Formations/CountryCodes.csv")
+# Select two-letter country codes
+CountryCodes[,"ISO.CODES"]<-gsub("( ).*","\\1",CountryCodes[,"ISO.CODES"])
+    
+    
 # Extract unique city names
 Cities<-unique(WorldCities[,"name"])
 # Extract FormationData SubsetDeepDive rows for grep search
