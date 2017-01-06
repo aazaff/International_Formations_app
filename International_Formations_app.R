@@ -51,14 +51,14 @@ DeepDiveData[,"words"]<-gsub("\\{|\\}","",DeepDiveData[,"words"])
 # Remove bracket symbols ({ and }) from DeepDiveData poses column
 DeepDiveData[,"poses"]<-gsub("\\{|\\}","",DeepDiveData[,"poses"])
 # Remove commas from DeepDiveData to prepare to run grep function
-CleanedWords<-gsub(","," ",DeepDiveData[,"words"])
+CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 # Remove commas from DeepDiveData poses column
 DeepDiveData[,"poses"]<-gsub(","," ",DeepDiveData[,"poses"])
 
-# STEP THREE: Search for the word " formation" in all cleaned DeepDiveData sentences (CleanedWords)
+# STEP THREE: Search for the word " formation" in all cleaned DeepDiveData sentences (CleanedDDWords)
 print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
 # Apply grep to cleaned words
-FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedWords)
+FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
 
 # STEP FOUR: Extact DeepDiveData rows corresponding with formation hits
 print(paste("Extract formation hit rows from DeepDiveData",Sys.time()))
@@ -320,12 +320,44 @@ StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
 # Load world cities data
-WorldCities<-read.csv("~/Documents/DeepDive/worldcities.csv")
-CountryCodes<-read.csv("~/Documents/DeepDive/International_Formations/CountryCodes.csv")
-# Select two-letter country codes
-CountryCodes[,"ISO.CODES"]<-gsub("( ).*","\\1",CountryCodes[,"ISO.CODES"])
-    
-    
+#WorldCities<-read.csv("~/Documents/DeepDive/worldcities2.csv")
+#CountryCodes<-read.csv("~/Documents/DeepDive/International_Formations/CountryCodes.csv")
+#Select two-letter country codes
+#CountryCodes[,"ISO.CODES"]<-gsub("( ).*","\\1",CountryCodes[,"ISO.CODES"])
+#CountryCodes[,"ISO.CODES"]<-gsub(" ","",CountryCodes[,"ISO.CODES"]) 
+#test<-merge(WorldCities,CountryCodes[,c("COUNTRY","POPULATION","AREA.KM2","GDP..USD","ISO.CODES")],by.x="ISO.3166.1.country.code", by.y="ISO.CODES", all.x=TRUE)        
+# DEAL WITH BLANKS AND ERRORS CREATED BY "NA" COUNTRY CODE FOR NAMIBIA
+#Blanks<-which(test[,"ISO.3166.1.country.code"]=="")
+#test[,"ISO.3166.1.country.code"]<-as.character(test[,"ISO.3166.1.country.code"])
+#test[Blanks,"ISO.3166.1.country.code"]<-"BLANK" 
+#test[which(is.na(test[,"ISO.3166.1.country.code"])),"ISO.3166.1.country.code"]<-"NA"
+#test[which(test[,"ISO.3166.1.country.code"]=="NA"),"COUNTRY"]<-"Namibia"   
+#test[which(test[,"COUNTRY"]=="Namibia"),"POPULATION"]<-CountryCodes[which(CountryCodes[,"COUNTRY"]=="Namibia"),"POPULATION"]
+#test[which(test[,"COUNTRY"]=="Namibia"),"AREA.KM2"]<-CountryCodes[which(CountryCodes[,"COUNTRY"]=="Namibia"),"AREA.KM2"]
+#test[which(test[,"COUNTRY"]=="Namibia"),"GDP..USD"]<-CountryCodes[which(CountryCodes[,"COUNTRY"]=="Namibia"),"GDP..USD"]
+#test[which(is.na(test[,"GNS.UFI"])&test[,"name"]==""),"ISO.3166.1.country.code"]<-"KM"
+#test[which(is.na(test[,"GNS.UFI"])&test[,"name"]==""),"FIPS.5.2.subdivision.code"]<-2
+#test[which(is.na(test[,"GNS.UFI"])&test[,"name"]==""),"GNS.FD"]<-"PPLC"
+#test[which(is.na(test[,"GNS.UFI"])&test[,"name"]==""),"GNS.UFI"]<-"-2087938"
+#test[which(test[,"name"]==""),"ISO.639.1.language.code"]<-"ar"
+#test[which(test[,"name"]==""),"language.script"]<-"latin"
+#test[which(test[,"name"]==""),"latitude"]<-"-11.704167"
+#test[which(test[,"name"]==""),"longitude"]<-"43.240278"
+#test[which(test[,"name"]==""),"POPULATION"]<-CountryCodes[which(CountryCodes[,"ISO.CODES"]=="KM"),"POPULATION"]
+#test[which(test[,"name"]==""),"AREA.KM2"]<-CountryCodes[which(CountryCodes[,"ISO.CODES"]=="KM"),"AREA.KM2"]
+#test[which(test[,"name"]==""),"GDP..USD"]<-CountryCodes[which(CountryCodes[,"ISO.CODES"]=="KM"),"GDP..USD"]
+#test[which(test[,"name"]==""),"COUNTRY"]<-CountryCodes[which(CountryCodes[,"ISO.CODES"]=="KM"),"COUNTRY"]
+#test[which(test[,"name"]==""),"name"]<-"Moroni"
+#test[which(test[,"ISO.3166.1.country.code"]=="GF"),"Country"]<-"French Guiana"
+#test[which(test[,"ISO.3166.1.country.code"]=="MQ"),"Country"]<-"Martinique"
+#test[which(test[,"ISO.3166.1.country.code"]=="TF"),"Country"]<-"French Southern Territories"
+#test[,"COUNTRY"]<-as.character(test[,"COUNTRY"])
+#test[which(test[,"ISO.3166.1.country.code"]=="GF"),"COUNTRY"]<-"French Guiana"
+#test[which(test[,"ISO.3166.1.country.code"]=="MQ"),"COUNTRY"]<-"Martinique"
+#test[which(test[,"ISO.3166.1.country.code"]=="TF"),"COUNTRY"]<-"French Southern Territories"
+#test[which(test[,"ISO.3166.1.country.code"]=="GP"),"COUNTRY"]<-"Guadeloupe"
+
+WorldCities<-read.csv("~/Documents/DeepDive/WorldCities.csv")    
 # Extract unique city names
 Cities<-unique(WorldCities[,"name"])
 # Extract FormationData SubsetDeepDive rows for grep search
@@ -336,11 +368,11 @@ CleanedWords<-gsub(","," ",FormationSentences)
 # Search for cities: 
 CityHits<-sapply(Cities, function(x) grep(x, perl=TRUE, ignore.case=TRUE, CleanedWords))
 # Assign names
-names(CitySearch)<-Cities
+names(CityHits)<-Cities
 # Determine which cities had matches 
 CityCheck<-sapply(CityHits, function(x) length(x)>0)
 # Extract those cities and their match data
-CityMatches<-CitySearch[which(CityCheck==TRUE)]
+CityMatches<-CityHits[which(CityCheck==TRUE)]
 # Extract sentences with cities in them, and their docid, sent id data
 CitySentence<-sapply(unlist(CityMatches), function(x) CleanedWords[x])
 CityDocid<-sapply(unlist(CityMatches), function(x) FormationData[x,"docid"])
@@ -357,7 +389,22 @@ CityData[,"CityName"]<-as.character(CityData[,"CityName"])
 CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
 CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
 CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
-colnames(CityData)<-c("CityName","Formation","docid","sentid")
+colnames(CityData)<-c("CityName","Formation","docid","sentid","Sentence")
+
+# Extract country names associated with each city 
+Countries<-sapply(CityData[,"CityName"],function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"]) 
+# Get unique country names for each city name
+Countries<-sapply(Countries,unique) 
+# Collapse each vector in the countries list into a single character string
+Countries<-sapply(Countries,function(x) paste(x, collapse=","))
+# Bind countries with associated cities in CityData
+CityData<-cbind(CityData,Countries)
+# Subset DeepDiveData to only include the documents in CityData list
+LocationDeepDive<-subset(DeepDiveData,DeepDiveData[,"docid"]%in%CityData[,"docid"])
+# Clean LocationDeepDive sentences to prepare for grep
+CleanedWords<-gsub(","," ",LocationDeepDive[,"words"])
+# Search for 
+CountryHits<-sapply(Countries, function(x) grepl(x, ignore.case=TRUE, perl = TRUE, CleanedWords))    
     
 # STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
