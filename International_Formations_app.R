@@ -403,8 +403,14 @@ CityData<-cbind(CityData,Countries)
 LocationDeepDive<-subset(DeepDiveData,DeepDiveData[,"docid"]%in%CityData[,"docid"])
 # Clean LocationDeepDive sentences to prepare for grep
 CleanedWords<-gsub(","," ",LocationDeepDive[,"words"])
-# Search for 
-CountryHits<-sapply(Countries, function(x) grepl(x, ignore.case=TRUE, perl = TRUE, CleanedWords))    
+# Search for the country name(s) that each city is associated with
+Countries<-sapply(unique(CityData[,"CityName"]),function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"])
+# Collapse the countries associated with each city into single character strings
+Countries<-sapply(Countries, function(x) paste(unique(x),collapse=","))
+# Create a city, country matrix
+CityCountries<-cbind(names(Countries), Countries)
+# Assign column names
+colnames(CityCountries)<-c("CityName","Countries")
     
 # STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
