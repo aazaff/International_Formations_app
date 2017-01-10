@@ -391,26 +391,32 @@ CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
 CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
 colnames(CityData)<-c("CityName","Formation","docid","sentid","Sentence")
 
+# Search for the country name(s) that each city is associated with
+Countries<-sapply(unique(CityData[,"CityName"]),function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"])
+# Collapse each vector in the countries list into a single character string
+Countries<-sapply(Countries,function(x) paste(unique(x), collapse=",")) 
+# Bind countries with associated cities in CityData
+    
 # Extract country names associated with each city 
 Countries<-sapply(CityData[,"CityName"],function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"]) 
 # Get unique country names for each city name
 Countries<-sapply(Countries,unique) 
 # Collapse each vector in the countries list into a single character string
-Countries<-sapply(Countries,function(x) paste(x, collapse=","))
-# Bind countries with associated cities in CityData
-CityData<-cbind(CityData,Countries)
-# Subset DeepDiveData to only include the documents in CityData list
-LocationDeepDive<-subset(DeepDiveData,DeepDiveData[,"docid"]%in%CityData[,"docid"])
-# Clean LocationDeepDive sentences to prepare for grep
-CleanedWords<-gsub(","," ",LocationDeepDive[,"words"])
-# Search for the country name(s) that each city is associated with
-Countries<-sapply(unique(CityData[,"CityName"]),function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"])
-# Collapse the countries associated with each city into single character strings
-Countries<-sapply(Countries, function(x) paste(unique(x),collapse=","))
+Countries<-sapply(Countries,function(x) paste(unique(x), collapse=","))
 # Create a city, country matrix
 CityCountries<-cbind(names(Countries), Countries)
 # Assign column names
 colnames(CityCountries)<-c("CityName","Countries")
+# Merge CityCountry country data with CityData according to city name
+CityData<-merge(CityData,CityCountries, by="CityName", all.x=TRUE) 
+# Subset DeepDiveData to only include the documents in CityData list
+LocationDeepDive<-subset(DeepDiveData,DeepDiveData[,"docid"]%in%CityData[,"docid"])
+# Clean LocationDeepDive sentences to prepare for grep
+CleanedWords<-gsub(","," ",LocationDeepDive[,"words"])
+# Search for each respective LocationDeepDive document for the appropriate city name
+
+
+
     
 # STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
