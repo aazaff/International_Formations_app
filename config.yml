@@ -15,7 +15,7 @@ email: erika.ito@outlook.com
 language: R 3.3.1
 
 # The NLP product to run the application against (NLP, NLP352, OCR, Cuneiform -- see input/README for more info)
-product: NLP352, docid_terms
+product: NLP352, docid_country
 
 # How often the application should be run
 frequency: once
