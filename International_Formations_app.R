@@ -357,6 +357,9 @@ print(paste("Search for locations in FormationData sentences",Sys.time()))
 #test[which(test[,"ISO.3166.1.country.code"]=="TF"),"COUNTRY"]<-"French Southern Territories"
 #test[which(test[,"ISO.3166.1.country.code"]=="GP"),"COUNTRY"]<-"Guadeloupe"
 
+###### We can fill in blank country information by overlaying these points on a map of countries ######
+###### We should remove cities that are numbers
+    
 WorldCities<-read.csv("~/Documents/DeepDive/WorldCities.csv")    
 # Extract unique city names
 Cities<-unique(WorldCities[,"name"])
@@ -390,12 +393,24 @@ CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
 CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
 CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
 colnames(CityData)<-c("CityName","Formation","docid","sentid","Sentence")
+    
+# Load docid_country_tuples
+CountryTuples<-read.table(file='input/docid_country_tuples',header=FALSE,quote=NULL,sep="\t")
+#if testing: CountryTuples<-read.table(file='~/Documents/DeepDive/International_Formations/input/docid_countries_tuples.txt',header=FALSE,quote=NULL,sep="\t")
+# Reformat CountryTuples
+CountryTuples<-as.matrix(CountryTuples)
+# Assign column names
+colnames(CountryTuples)<-c("docid","Country")
+# Subset CountryTuples to only include docids in CityData
+SubsetCountryTuples<-subset(CountryTuples,CountryTuples[,"docid"]%in%CityData[,"docid"])
 
+    
 # Search for the country name(s) that each city is associated with
 Countries<-sapply(unique(CityData[,"CityName"]),function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"])
 # Collapse each vector in the countries list into a single character string
 Countries<-sapply(Countries,function(x) paste(unique(x), collapse=",")) 
 # Bind countries with associated cities in CityData
+
     
 # Extract country names associated with each city 
 Countries<-sapply(CityData[,"CityName"],function(x) WorldCities[which(WorldCities[,"name"]==x),"COUNTRY"]) 
@@ -407,16 +422,11 @@ Countries<-sapply(Countries,function(x) paste(unique(x), collapse=","))
 CityCountries<-cbind(names(Countries), Countries)
 # Assign column names
 colnames(CityCountries)<-c("CityName","Countries")
-# Merge CityCountry country data with CityData according to city name
-CityData<-merge(CityData,CityCountries, by="CityName", all.x=TRUE) 
 # Subset DeepDiveData to only include the documents in CityData list
-LocationDeepDive<-subset(DeepDiveData,DeepDiveData[,"docid"]%in%CityData[,"docid"])
+#LocationDeepDive<-subset(DeepDiveData,DeepDiveData[,"docid"]%in%CityData[,"docid"])
 # Clean LocationDeepDive sentences to prepare for grep
-CleanedWords<-gsub(","," ",LocationDeepDive[,"words"])
-# Search for each respective LocationDeepDive document for the appropriate city name
-
-
-
+#CleanedWords<-gsub(","," ",LocationDeepDive[,"words"])
+    
     
 # STEP NINETEEN: Write outputs
 print(paste("Writing Outputs",Sys.time()))
