@@ -320,9 +320,6 @@ StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
 
-###### We can fill in blank country information by overlaying these points on a map of countries ######
-###### We should remove cities that are numbers
-    
 WorldCities<-read.csv("~/Documents/DeepDive/world_cities_country.csv")    
 # Extract unique city, country tuples
 Cities<-unique(WorldCities[,c("city_name","admin","latitude","longitude")])
