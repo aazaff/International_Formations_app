@@ -362,16 +362,18 @@ print(paste("Search for locations in FormationData sentences",Sys.time()))
     
 WorldCities<-read.csv("~/Documents/DeepDive/WorldCities.csv")    
 # Extract unique city names
-Cities<-unique(WorldCities[,"name"])
+Cities<-unique(WorldCities[,c("name","COUNTRY")])
+# Create unique character strings of city.countryname
+CityCountryName<-apply(Cities, 1, function(x) paste(x, collapse="."))
 # Extract FormationData SubsetDeepDive rows for grep search
 FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
 # Clean the sentences to prepare for grep
 CleanedWords<-gsub(","," ",FormationSentences)
 
 # Search for cities: 
-CityHits<-sapply(Cities, function(x) grep(x, perl=TRUE, ignore.case=TRUE, CleanedWords))
+CityHits<-sapply(Cities[,"name"], function(x) grep(x, perl=TRUE, ignore.case=TRUE, CleanedWords))
 # Assign names
-names(CityHits)<-Cities
+names(CityHits)<-CityCountryName
 # Determine which cities had matches 
 CityCheck<-sapply(CityHits, function(x) length(x)>0)
 # Extract those cities and their match data
@@ -384,15 +386,23 @@ CitySentid<-sapply(unlist(CityMatches), function(x) FormationData[x,"sentid"])
 CityFormation<-sapply(unlist(CityMatches), function(x) FormationData[x,"Formation"])
 # Create a city name column
 CityCount<-sapply(CityMatches, length)
-CityName<-rep(names(CityMatches), times=CityCount)
+CityCountryName<-rep(names(CityMatches), times=CityCount)
+# Split CityCountryName back into separated cities and countries  
+CityCountryNameSplit<-sapply(CityCountryName, function(x) strsplit(x,'\\.'))
+# Create a CityName column
+CityName<-sapply(CityCountryNameSplit, function(x) x[1])
+# Create a CountryName column
+CountryName<-sapply(CityCountryNameSplit, function(x) x[2])
 # Bind this data into a dataframe
-CityData<-as.data.frame(cbind(CityName,CityFormation,CityDocid,CitySentid,CitySentence))
+CityData<-as.data.frame(cbind(CityName,CountryName,CityFormation,CityDocid,CitySentid,CitySentence))
 # Reformat CityData
 CityData[,"CityName"]<-as.character(CityData[,"CityName"])
+CityData[,"CountryName"]<-as.character(CityData[,"CountryName"])   
 CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
 CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
 CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
-colnames(CityData)<-c("CityName","Formation","docid","sentid","Sentence")
+colnames(CityData)<-c("CityName","CountryName","Formation","docid","sentid","Sentence")
+   
     
 # Load docid_country_tuples
 CountryTuples<-read.table(file='input/docid_country_tuples',header=FALSE,quote=NULL,sep="\t")
@@ -403,6 +413,7 @@ CountryTuples<-as.matrix(CountryTuples)
 colnames(CountryTuples)<-c("docid","Country")
 # Subset CountryTuples to only include docids in CityData
 SubsetCountryTuples<-subset(CountryTuples,CountryTuples[,"docid"]%in%CityData[,"docid"])
+  
 
     
 # Search for the country name(s) that each city is associated with
