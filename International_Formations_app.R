@@ -1,10 +1,18 @@
+# Custom functions are camelCase. Arrays, parameters, and arguments are PascalCase
+# Dependency functions are not embedded in master functions, and are marked with the flag dependency in the documentation
+# []-notation is used wherever possible, and $-notation is avoided.
+
+######################################### Load Required Libraries ###########################################
+# Save and print the app start time
 Start<-print(Sys.time())
 
-if (ssuppressWarnings(require("doParallel"))==FALSE) {
+# Load or install the doParallel package
+if (suppressWarnings(require("doParallel"))==FALSE) {
     install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
     library("doParallel");
     }
 
+# Load or install the RPostgreSQL package
 if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
     install.packages("RPostgreSQL",repos="http://cran.cnr.berkeley.edu/");
     library("RPostgreSQL");
@@ -17,17 +25,21 @@ if (length(CommandArgument)==0) {
      } else {
      Cluster<-makeCluster(as.numeric(CommandArgument[1]))
      }
+#############################################################################################################
+##################################### DATA DWONLOAD FUNCTIONS, FIDELITY #####################################
+#############################################################################################################
+# No funcitons at this time
 
-# STEP ONE: Load DeepDiveData 
+########################################### Data Download Script ############################################
+# print current status to terminal 
 print(paste("Load postgres tables",Sys.time()))
 
 # Download the config file
 Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
-
-# Connet to PostgreSQL
+# Connect to PostgreSQL
 Driver <- dbDriver("PostgreSQL") # Establish database driver
 Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
-# Make SQL query
+# Query the sentences fro postgresql
 DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352") 
 
 # If Testing: 
@@ -43,45 +55,71 @@ StepOneDocs<-length((unique(DeepDiveData[,"docid"])))
 StepOneRows<-nrow(DeepDiveData)
 StepOneClusters<-0
 
-# STEP TWO: Clean DeepDiveData 
+#############################################################################################################
+###################################### DATA CLEANING FUNCTIONS, FIDELITY ####################################
+#############################################################################################################
+# No functions at this time
+
+############################################ Data Cleaning Script ###########################################
+# print current status to terminal
 print(paste("Clean DeepDiveData",Sys.time()))
 
 # Remove bracket symbols ({ and }) from DeepDiveData sentences
 DeepDiveData[,"words"]<-gsub("\\{|\\}","",DeepDiveData[,"words"])
+
 # Remove bracket symbols ({ and }) from DeepDiveData poses column
 DeepDiveData[,"poses"]<-gsub("\\{|\\}","",DeepDiveData[,"poses"])
-# Remove commas from DeepDiveData to prepare to run grep function
-CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
+
 # Remove commas from DeepDiveData poses column
 DeepDiveData[,"poses"]<-gsub(","," ",DeepDiveData[,"poses"])
 
-# STEP THREE: Search for the word " formation" in all cleaned DeepDiveData sentences (CleanedDDWords)
-print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
-# Apply grep to cleaned words
-FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
+# Remove commas from DeepDiveData to prepare to run grep function
+CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 
-# STEP FOUR: Extact DeepDiveData rows corresponding with formation hits
-print(paste("Extract formation hit rows from DeepDiveData",Sys.time()))
-SubsetDeepDive<-sapply(FormationHits,function(x) DeepDiveData[x,])
-# If testing: SubsetDeepDive<-sapply(FormationHits[1:1000],function(x) DeepDiveData[x,])
-# Reformat SubsetDeepDive
-SubsetDeepDive<-t(SubsetDeepDive)
+#############################################################################################################
+###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
+#############################################################################################################
+# Search for the word formation
+grepFormation<-function(Data) {
+    Output<-grep(" formation",Data,ignore.case=TRUE,perl=TRUE)
+    return(Output)
+    }
+
+########################################### Formation Search Script #########################################
+# print current status 
+print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
+
+# Apply grep to the object cleaned words
+FormationHits<-parSapply(Cluster,CleanedDDWords,grepFormation)
+
+# Extact DeepDiveData rows corresponding with formation hits
+SubsetDeepDive<-DeepDiveData[FormationHits,]
     
-# RECORD STATS
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
+# Record the number of documents and rows in subset deep dive 
 StepFourDescription<-"Subset DeepDiveData to rows which contain the word 'formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepFourDocs<-length((unique(SubsetDeepDive[,"docid"])))
 StepFourRows<-nrow(SubsetDeepDive)
 StepFourClusters<-0
 
-# STEP FIVE: Replace slashes from SubsetDeepDive words and poses columns with the word "SLASH"
-print(paste("Clean SubsetDeepDive",Sys.time()))
+#############################################################################################################
+####################################### NNP CLUSTER FUNCTIONS, FIDELITY #####################################
+#############################################################################################################
+# Consecutive word position locater function:
+findConsecutive<-function(DeepDivePoses) {
+    Breaks<-c(0,which(diff(DeepDivePoses)!=1),length(DeepDivePoses))
+    ConsecutiveList<-lapply(seq(length(Breaks)-1),function(x) DeepDivePoses[(Breaks[x]+1):Breaks[x+1]])
+    return(ConsecutiveList)
+    }
+
+############################################## NNP Cluster Script ###########################################
+# Replace slashes from SubsetDeepDive words and poses columns with the word "SLASH"
 SubsetDeepDive[,"words"]<-gsub("\"","SLASH",SubsetDeepDive[,"words"])
 SubsetDeepDive[,"poses"]<-gsub("\"","SLASH",SubsetDeepDive[,"poses"])
 
-# STEP SIX: Extract NNPs from SubsetDeepDive
+# print current status to terminal
 print(paste("Extract NNPs from SubsetDeepDive rows",Sys.time()))
+
 # Create a list of vectors showing each formation hit sentence's unlisted poses column 
 DeepDivePoses<-sapply(SubsetDeepDive[,"poses"],function(x) unlist(strsplit(as.character(x)," ")))
 # Assign names to each list element corresponding to the document and sentence id of each sentence
@@ -92,22 +130,15 @@ names(DeepDivePoses)<-doc.sent
 # NOTE: Search for CC as to get hits like "Middendorf And Black Creek Formations" which is NNP, CC, NNP, NNP, NNP
 DeepDiveNNPs<-sapply(DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
     
-# STEP SEVEN: Find consecutive NNPs in DeepDiveNNPs
+# print current status to terminal
 print(paste("Find consecutive NNPs in DeepDiveNNPs",Sys.time()))
     
-# Consecutive word position locater function:
-findConsecutive<-function(DeepDivePoses) {
-    Breaks<-c(0,which(diff(DeepDivePoses)!=1),length(DeepDivePoses))
-    ConsecutiveList<-lapply(seq(length(Breaks)-1),function(x) DeepDivePoses[(Breaks[x]+1):Breaks[x+1]])
-    return(ConsecutiveList)
-    }
-
 # Apply function to DeepDiveNNPs list
-ConsecutiveNNPs<-sapply(DeepDiveNNPs, function(x) findConsecutive(x))   
+ConsecutiveNNPs<-sapply(DeepDiveNNPs, findConsecutive)   
 # Collapse each cluster into a single character string such that each sentence from formation hits shows its associated clusters    
 SentenceNNPs<-sapply(ConsecutiveNNPs,function(y) sapply(y,function(x) paste(x,collapse=",")))
     
-# STEP EIGHT: Find words associated with Conescutive NNPs
+# print current status to terminal
 print(paste("Find words Associated with Conescutive NNPs",Sys.time()))
     
 # Create a data frame with a row for each NNP cluster
@@ -156,22 +187,35 @@ NNPWords<-sapply(ClusterWords, function(x) paste(array(x), collapse=" "))
 # Bind the clusters to the ClusterData frame
 ClusterData[,"NNPWords"]<-NNPWords
     
-# RECORD STATS
+# Update the stats table
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 StepEightDescription<-"Extract NPP clusters from SubsetDeepDive rows"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
 StepEightDocs<-length(unique(ClusterData[,"docid"]))
 StepEightRows<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
 StepEightClusters<-nrow(ClusterData)
+
+#############################################################################################################
+##################################### FORMATION CLUSTERS FUNCTIONS, FIDELITY ################################
+#############################################################################################################    
+# Capitalization function from stack exchane
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1,1)), substring(s, 2),
+      sep="", collapse=" ")
+}
     
-# STEP NINE: Extract the rows with clusters with the word 'formation' from ClusterData   
+########################################### Formation Clusters Script #######################################
+# print current status to terminal
 print(paste("Extract 'formation' clusters from ClusterData",Sys.time()))
-FormationClusters<-grep(" formation",ClusterData[,"NNPWords"],ignore.case=TRUE,perl=TRUE)
+    
+# Find NNP clusters with the world formation in them
+FormationClusters<-grep(" formation",ClusterData[,"NNPWords"],ignore.case=TRUE,perl=TRUE) # We could do a search for tail, to ensure it's the last word
 # Extract those rows from ClusterData
 FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
     
-# RECORD STATS
+# Update the stats table
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 StepNineDescription<-"Extract NNP clusters containing the word 'formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
@@ -179,25 +223,18 @@ StepNineDocs<-length(unique(FormationData[,"docid"]))
 StepNineRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 StepNineClusters<-nrow(FormationData)
     
-# STEP TEN: Format formation names to have all of the same capitalization patterns.
-print(paste("Capitalize formation names appropriately",Sys.time())) 
-# First, make all characters in the NNPWords column lower case
-FormationData[,"NNPWords"]<-tolower(FormationData[,"NNPWords"])
-# Second, capitalize the first letter of each word in the NNPWords column
-# Capitalization function:
-simpleCap <- function(x) {
-  s <- strsplit(x, " ")[[1]]
-  paste(toupper(substring(s, 1,1)), substring(s, 2),
-      sep="", collapse=" ")
-}
+# print current status to terminal
+print(paste("Capitalize formation names appropriately",Sys.time()))
     
+# Make all characters in the NNPWords column lower case
+FormationData[,"NNPWords"]<-tolower(FormationData[,"NNPWords"])
 # Apply simpleCap function to NNPWords column so the first letter of every word is capitalized.
 FormationData[,"NNPWords"]<-sapply(FormationData[,"NNPWords"], simpleCap)
     
-# STEP ELEVEN: Remove all characters after "Formation" or "Formations" in NNPWords column
+# print current status to terminal
 print(paste(" Remove all characters after 'Formation' or 'Formations'",Sys.time()))
     
-# ACCOUNT FOR THE FRENCH EXCEPTIONS WHERE WE WOULD NOT WANT TO REMOVE CHARACTERS AFTER FORMATIONS
+# Account for romance language exceptions
 Des<-grep("Des",FormationData[,"NNPWords"], perl=TRUE, ignore.case=TRUE)
 Les<-grep("Les",FormationData[,"NNPWords"], perl=TRUE, ignore.case=TRUE)
 FrenchRows<-c(Des,Les)
@@ -219,11 +256,10 @@ Singular<-SingularWithFrench[which(!SingularWithFrench%in%FrenchRows)]
 FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
 FormationData[Singular,"NNPWords"]<-FormationCut
     
-# STEP TWELVE: Remove FormationData rows which only have "Formation" in the NNPWords column
-print(paste("Capitalize formation names appropriately",Sys.time())) 
+# Remove FormationData rows which only have "Formation" in the NNPWords column
 FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
  
-# RECORD STATS
+# Update the stats table
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 StepTwelveDescription<-"Remove rows that are just the word 'Formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
@@ -291,9 +327,16 @@ FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both")
 FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 # Remove s in "Formations" where necessary
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
+
+#############################################################################################################
+####################################### FOSSIL MATCHING FUNCTIONS, FIDELITY #################################
+#############################################################################################################       
+# No functions at this time 
     
-# STEP SIXTEEN: Search FormationData sentences for the word " fossil"
-print(paste("Search FormationData sentences for ' fossil'",Sys.time())) 
+########################################## Fossil Matching Script ########################################### 
+# print current status to terminal
+print(paste("Search FormationData sentences for ' fossil'",Sys.time()))
+    
 # NOTE: Put a space in front of "fossil" for grep search to avoid hits for the word "unfossiliferous"
 # Extract document sentences for associated FormationData rows
 FormationSentences<-SubsetDeepDive[FormationData[,"SubsetDeepDiveRow"],"words"]
@@ -301,8 +344,6 @@ FormationSentences<-SubsetDeepDive[FormationData[,"SubsetDeepDiveRow"],"words"]
 CleanedWords<-gsub(","," ",FormationSentences)
 FossilHits<-grep(" fossil", perl=TRUE, ignore.case=TRUE, CleanedWords)
     
-# STEP SEVENTEEN: Make data frame for fossil, formation sentences
-print(paste("Make data frame for fossil, formation sentences",Sys.time()))
 # Extract the formations from FormationData that co-occur in a sentence with " fossil"
 FossilData<-FormationData[FossilHits,]
 # Extract sentences with a formation and a fossil hit
@@ -317,6 +358,13 @@ StepSeventeenDescription<-"Extract document sentences with a formation and a fos
 StepSeventeenDocs<-length(unique(FossilData[,"docid"]))
 StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
 
+#############################################################################################################
+####################################### LOCATIONA MATCHING FUNCTIONS, FIDELITY ##############################
+#############################################################################################################       
+# No functions at this time 
+    
+########################################### Locations Matching Script #######################################     
+    
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
 
