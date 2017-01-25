@@ -347,7 +347,6 @@ setwd(paste(CurrentDirectory,"/output",sep=""))
 unlink("*")
 
 # Write output files
-
 saveRDS(FormationData, "FormationData.rds")
 write.csv(FormationData, "FormationData.csv")
 write.csv(FormationStats, "FormationStats.csv")
