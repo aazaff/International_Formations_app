@@ -328,8 +328,7 @@ FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Forma
 print(paste("Writing Outputs",Sys.time()))
      
 # Extract columns of interest for the output
-# FormationData<-FormationData[,c("Formation","docid","sentid")]
-FossilData<-FossilData[,c("Formation","docid","sentid","Sentence")]
+FormationData<-FormationData[,c("Formation","docid","sentid")]
    
 # Return formation stats table 
 StepDescription<-c(Description1, Description2, Description3, Description4, Description5, Description6, Description7)
