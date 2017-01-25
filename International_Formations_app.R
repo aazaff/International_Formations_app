@@ -264,7 +264,7 @@ Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 Clusters5<-nrow(FormationData)        
        
 # STEP THIRTEEN: Split the NNPClusters where there is an "And"
-SplitFormations<-strsplit(FormationData[,"NNPWords"],'And')
+SplitFormations<-strsplit(FormationData[,"NNPWords"],'And ')
 # Remove the blanks created by the splitting
 SplitFormationsClean<-sapply(SplitFormations,function(x) unlist(x)[unlist(x)!=""])   
 # SplitFormations is a list of the split clusters. Figure out which clusters were split at "And" using length.
