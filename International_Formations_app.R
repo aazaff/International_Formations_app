@@ -18,13 +18,6 @@ if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
     library("RPostgreSQL");
     }
 
-# Start a cluster for multicore, 3 by default or higher if passed as command line argument
-CommandArgument<-commandArgs(TRUE)
-if (length(CommandArgument)==0) {
-     Cluster<-makeCluster(3)
-     } else {
-     Cluster<-makeCluster(as.numeric(CommandArgument[1]))
-     }
 #############################################################################################################
 ##################################### DATA DWONLOAD FUNCTIONS, FIDELITY #####################################
 #############################################################################################################
@@ -49,11 +42,11 @@ DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352")
 
 # RECORD INITIAL STATS
 # INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA: 
-StepOneDescription<-"Initial Data"
+Description1<-"Initial Data"
 # INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA:
-StepOneDocs<-length((unique(DeepDiveData[,"docid"])))
-StepOneRows<-nrow(DeepDiveData)
-StepOneClusters<-0
+Docs1<-length((unique(DeepDiveData[,"docid"])))
+Rows1<-nrow(DeepDiveData)
+Clusters1<-0
 
 #############################################################################################################
 ###################################### DATA CLEANING FUNCTIONS, FIDELITY ####################################
@@ -81,7 +74,7 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 #############################################################################################################
 # Search for the word formation
 grepFormation<-function(Data) {
-    Output<-grep(" formation",Data,ignore.case=TRUE,perl=TRUE)
+    Output<-grepl(" formation",Data,ignore.case=TRUE,perl=TRUE)
     return(Output)
     }
 
@@ -90,17 +83,17 @@ grepFormation<-function(Data) {
 print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
 
 # Apply grep to the object cleaned words
-FormationHits<-parSapply(Cluster,CleanedDDWords,grepFormation)
+FormationHits<-sapply(CleanedDDWords,grepFormation)
 
 # Extact DeepDiveData rows corresponding with formation hits
 SubsetDeepDive<-DeepDiveData[FormationHits,]
     
 # Record the number of documents and rows in subset deep dive 
-StepFourDescription<-"Subset DeepDiveData to rows which contain the word 'formation'"
+Description2<-"Subset DeepDiveData to rows which contain the word 'formation'"
 # NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepFourDocs<-length((unique(SubsetDeepDive[,"docid"])))
-StepFourRows<-nrow(SubsetDeepDive)
-StepFourClusters<-0
+Docs2<-length((unique(SubsetDeepDive[,"docid"])))
+Rows2<-nrow(SubsetDeepDive)
+Clusters2<-0
 
 #############################################################################################################
 ####################################### NNP CLUSTER FUNCTIONS, FIDELITY #####################################
