@@ -72,19 +72,13 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
 #############################################################################################################
-# Search for the word formation
-grepFormation<-function(Data) {
-    Output<-grepl(" formation",Data,ignore.case=TRUE,perl=TRUE)
-    return(Output)
-    }
 
 ########################################### Formation Search Script #########################################
 # print current status 
 print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
 
 # Apply grep to the object cleaned words
-FormationHits<-sapply(CleanedDDWords,grepFormation)
-
+FormationHits<-sapply(" formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
 # Extact DeepDiveData rows corresponding with formation hits
 SubsetDeepDive<-DeepDiveData[FormationHits,]
     
