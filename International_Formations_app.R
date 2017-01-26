@@ -8,24 +8,24 @@ Start<-print(Sys.time())
 
 # If running from UW-Madison
 # Load or install the doParallel package
-#if (suppressWarnings(require("doParallel"))==FALSE) {
-    #install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
-    #library("doParallel");
-    #}
+if (suppressWarnings(require("doParallel"))==FALSE) {
+    install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
+    library("doParallel");
+    }
 
 # Load or install the RPostgreSQL package
-#if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
-    #install.packages("RPostgreSQL",repos="http://cran.cnr.berkeley.edu/");
-    #library("RPostgreSQL");
-    #}
+if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
+    install.packages("RPostgreSQL",repos="http://cran.cnr.berkeley.edu/");
+    library("RPostgreSQL");
+    }
 
 # Start a cluster for multicore, 3 by default or higher if passed as command line argument
-#CommandArgument<-commandArgs(TRUE)
-#if (length(CommandArgument)==0) {
-#     Cluster<-makeCluster(3)
-#     } else {
-#     Cluster<-makeCluster(as.numeric(CommandArgument[1]))
-#     }
+CommandArgument<-commandArgs(TRUE)
+if (length(CommandArgument)==0) {
+     Cluster<-makeCluster(3)
+     } else {
+     Cluster<-makeCluster(as.numeric(CommandArgument[1]))
+     }
 
 #############################################################################################################
 ##################################### DATA DWONLOAD FUNCTIONS, FIDELITY #####################################
@@ -88,8 +88,7 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
 
 # Apply grep to the object cleaned words
-#FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
-FormationHits<-sapply(" formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
+FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
 # Extact DeepDiveData rows corresponding with formation hits
 SubsetDeepDive<-DeepDiveData[FormationHits,]
 
@@ -348,7 +347,7 @@ write.csv(FormationData, "FormationData.csv")
 write.csv(Stats, "Stats.csv")
     
 # Stop the cluster
-# stopCluster(Cluster)
+stopCluster(Cluster)
 
 # COMPLETE
 print(paste("Complete",Sys.time())) 
