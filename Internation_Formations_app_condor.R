@@ -19,7 +19,8 @@ print(paste("Load data table",Sys.time()))
 # DeepDiveData<-as.data.frame(read.csv("input/nlp_sentences_352.csv", stringsAsFactors=FALSE))
 
 # Download data from csv file:
-DeepDiveData<-as.data.frame(read.csv("~/Documents/DeepDive/International_Formations/nlp_sentences_352.csv", stringsAsFactors=FALSE))
+
+DeepDiveData<-as.data.frame(read.csv("input/nlp_sentences_352.csv", stringsAsFactors=FALSE))
 
 # Record initial stats
 Description1<-"Initial Data"
