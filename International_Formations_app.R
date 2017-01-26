@@ -7,16 +7,16 @@
 Start<-print(Sys.time())
 
 # Load or install the doParallel package
-if (suppressWarnings(require("doParallel"))==FALSE) {
-    install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
-    library("doParallel");
-    }
+#if (suppressWarnings(require("doParallel"))==FALSE) {
+    #install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
+    #library("doParallel");
+    #}
 
 # Load or install the RPostgreSQL package
-if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
-    install.packages("RPostgreSQL",repos="http://cran.cnr.berkeley.edu/");
-    library("RPostgreSQL");
-    }
+#if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
+    #install.packages("RPostgreSQL",repos="http://cran.cnr.berkeley.edu/");
+    #library("RPostgreSQL");
+    #}
 
 # Start a cluster for multicore, 3 by default or higher if passed as command line argument
 #CommandArgument<-commandArgs(TRUE)
