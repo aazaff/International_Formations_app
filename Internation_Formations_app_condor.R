@@ -310,7 +310,6 @@ setwd(paste(CurrentDirectory,"/output",sep=""))
 unlink("*")
 
 # Write output files
-saveRDS(FormationData, "FormationData.rds")
 write.csv(FormationData, "FormationData.csv")
 write.csv(Stats, "Stats.csv")
     
