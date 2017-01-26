@@ -6,6 +6,7 @@
 # Save and print the app start time
 Start<-print(Sys.time())
 
+# If running from UW-Madison
 # Load or install the doParallel package
 #if (suppressWarnings(require("doParallel"))==FALSE) {
     #install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
@@ -35,18 +36,25 @@ Start<-print(Sys.time())
 # print current status to terminal 
 print(paste("Load postgres tables",Sys.time()))
 
-# Download the config file
-Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
-# Connect to PostgreSQL
-Driver <- dbDriver("PostgreSQL") # Establish database driver
-Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
-# Query the sentences fro postgresql
-DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352") 
+# IF SHIPPING TO CONDOR: 
+# DeepDiveData<-as.data.frame(read.csv("input/nlp_sentences_352.csv", stringsAsFactors=FALSE))
 
-# If Testing: 
+# If RUNNING FROM UW-MADISON:
+# Download the config file
+#Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
+# Connect to PostgreSQL
+#Driver <- dbDriver("PostgreSQL") # Establish database driver
+#Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
+# Query the sentences fro postgresql
+#DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352") 
+
+# IF TESTING IN 402:
+# Download data from Postgres:
 #Driver <- dbDriver("PostgreSQL") # Establish database driver
 #Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
 #DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM pbdb_fidelity.pbdb_fidelity_data")
+# Download data from csv file:
+DeepDiveData<-as.data.frame(read.csv("~/Documents/DeepDive/International_Formations/nlp_sentences_352.csv", stringsAsFactors=FALSE))
 
 # RECORD INITIAL STATS
 # INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA: 
