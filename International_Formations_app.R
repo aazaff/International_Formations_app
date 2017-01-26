@@ -36,30 +36,24 @@ Start<-print(Sys.time())
 # print current status to terminal 
 print(paste("Load postgres tables",Sys.time()))
 
-# IF SHIPPING TO CONDOR: 
-# DeepDiveData<-as.data.frame(read.csv("input/nlp_sentences_352.csv", stringsAsFactors=FALSE))
-
 # If RUNNING FROM UW-MADISON:
 # Download the config file
-#Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
+Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
 # Connect to PostgreSQL
-#Driver <- dbDriver("PostgreSQL") # Establish database driver
-#Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
+Driver <- dbDriver("PostgreSQL") # Establish database driver
+Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
 # Query the sentences fro postgresql
-#DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352") 
+DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352") 
 
 # IF TESTING IN 402:
 # Download data from Postgres:
 #Driver <- dbDriver("PostgreSQL") # Establish database driver
 #Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
 #DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM pbdb_fidelity.pbdb_fidelity_data")
-# Download data from csv file:
-DeepDiveData<-as.data.frame(read.csv("~/Documents/DeepDive/International_Formations/nlp_sentences_352.csv", stringsAsFactors=FALSE))
 
-# RECORD INITIAL STATS
-# INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA: 
+# Record initial stats
 Description1<-"Initial Data"
-# INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA:
+# Initial number of documents and rows in DeepDiveData
 Docs1<-length((unique(DeepDiveData[,"docid"])))
 Rows1<-nrow(DeepDiveData)
 Clusters1<-0
@@ -100,9 +94,8 @@ FormationHits<-sapply(" formation",function(x,y) grep(x,y,ignore.case=TRUE, perl
 SubsetDeepDive<-DeepDiveData[FormationHits,]
 
 # Update the stats table
-# Record the number of documents and rows in subset deep dive 
 Description2<-"Subset DeepDiveData to rows which contain the word 'formation'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+# Record number of documents and rows in SubsetDeepDive:
 Docs2<-length((unique(SubsetDeepDive[,"docid"])))
 Rows2<-nrow(SubsetDeepDive)
 Clusters2<-0
@@ -193,9 +186,8 @@ NNPWords<-sapply(ClusterWords, function(x) paste(array(x), collapse=" "))
 ClusterData[,"NNPWords"]<-NNPWords
     
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 Description3<-"Extract NPP clusters from SubsetDeepDive rows"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+# Record number of documents and rows in SubsetDeepDive:
 Docs3<-length(unique(ClusterData[,"docid"]))
 Rows3<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
 Clusters3<-nrow(ClusterData)
@@ -221,9 +213,8 @@ FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
     
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 Description4<-"Extract NNP clusters containing the word 'formation'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+# Record number of documents and rows in SubsetDeepDive:
 Docs4<-length(unique(FormationData[,"docid"]))
 Rows4<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 Clusters4<-nrow(FormationData)
@@ -265,9 +256,8 @@ FormationData[Singular,"NNPWords"]<-FormationCut
 FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
  
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 Description5<-"Remove rows that are just the word 'Formation'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+# Record number of documents and rows in SubsetDeepDive:
 Docs5<-length(unique(FormationData[,"docid"]))
 Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 Clusters5<-nrow(FormationData)        
@@ -300,9 +290,8 @@ FormationHalves<-grep("Formation",FormationData[,"Formation"], perl=TRUE, ignore
 FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
     
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 Description6<-"Split NNPClusters at 'And'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+# Record number of documents and rows in SubsetDeepDive:
 Docs6<-length(unique(FormationData[,"docid"]))
 Rows6<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
 Clusters6<-nrow(FormationData)
@@ -317,9 +306,8 @@ BadFormations<-which(WordLength>5|WordLength==1)
 FormationData<-FormationData[-BadFormations,]
 
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
 Description7<-"Remove Formations > 5 words in length"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
+# Record number of documents and rows in SubsetDeepDive:
 Docs7<-length(unique(FormationData[,"docid"]))
 Rows7<-dim(unique(FormationData[,c("docid","sentid")]))[1]
 Clusters7<-nrow(FormationData) 
