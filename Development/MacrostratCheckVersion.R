@@ -508,7 +508,7 @@ MacroFormationState<-cbind(MacroFormationState,MacroPaste)
 CityDataFormationState<-cbind(CityDataFormationState,CityDataPaste)
 
 # Check to see which formation,location tuples from CityDataFormationState appear in MacroFormationState
-CheckedCityData<-CityDataFormationState[which(CityDataFormationState[,"CityDataPaste"]%in%MacroFormationState[,"MacroPaste"]),]    
+CheckedCityData<-MacroCityData[which(CityDataFormationState[,"CityDataPaste"]%in%MacroFormationState[,"MacroPaste"]),]    
     
     
     
