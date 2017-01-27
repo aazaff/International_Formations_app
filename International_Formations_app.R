@@ -118,14 +118,14 @@ SubsetDeepDive[,"poses"]<-gsub("\"","SLASH",SubsetDeepDive[,"poses"])
 print(paste("Extract NNPs from SubsetDeepDive rows",Sys.time()))
 
 # Create a list of vectors showing each formation hit sentence's unlisted poses column 
-DeepDivePoses<-sapply(SubsetDeepDive[,"poses"],function(x) unlist(strsplit(as.character(x)," ")))
+DeepDivePoses<-parSapply(Cluster, SubsetDeepDive[,"poses"],function(x) unlist(strsplit(as.character(x)," ")))
 # Assign names to each list element corresponding to the document and sentence id of each sentence
 doc.sent<-paste(SubsetDeepDive[,"docid"],SubsetDeepDive[,"sentid"],sep=".")
 names(DeepDivePoses)<-doc.sent
 
 # Extract all the NNPs from DeepDivePoses
 # NOTE: Search for CC as to get hits like "Middendorf And Black Creek Formations" which is NNP, CC, NNP, NNP, NNP
-DeepDiveNNPs<-sapply(DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
+DeepDiveNNPs<-parSapply(Cluster, DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
     
 # print current status to terminal
 print(paste("Find consecutive NNPs in DeepDiveNNPs",Sys.time()))
@@ -163,7 +163,7 @@ ClusterData[,"sentid"]<-as.numeric(as.character(ClusterData[,"sentid"]))
 # Create a vector of the number of rows in ClusterData.
 NumClusterVector<-1:nrow(ClusterData)   
 # Extract the proper SubsetDeepDive rows based on the data in ClusterData    
-SubsetDeepDiveRow<-sapply(NumClusterVector,function(x) which(SubsetDeepDive[,"docid"]==ClusterData[x,"docid"]&SubsetDeepDive[,"sentid"]==ClusterData[x,"sentid"]))
+SubsetDeepDiveRow<-parSapply(Cluster, NumClusterVector,function(x) which(SubsetDeepDive[,"docid"]==ClusterData[x,"docid"]&SubsetDeepDive[,"sentid"]==ClusterData[x,"sentid"]))
 # Bind row data to ClusterData and convert it into a dataframe
 ClusterData<-cbind(ClusterData,SubsetDeepDiveRow)
 ClusterData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(ClusterData[,"SubsetDeepDiveRow"]))
