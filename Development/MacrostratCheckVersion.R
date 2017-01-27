@@ -319,3 +319,111 @@ FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both")
 FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 # Remove s in "Formations" where necessary
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
+    
+#############################################################################################################
+####################################### LOCATIONA MATCHING FUNCTIONS, FIDELITY ##############################
+#############################################################################################################       
+# No functions at this time 
+    
+########################################### Locations Matching Script #######################################     
+    
+# STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
+print(paste("Search for locations in FormationData sentences",Sys.time()))   
+ 
+# If testing in 402: WorldCities<-read.csv("~/Documents/DeepDive/International_Formations/input/world_cities_province.csv")
+WorldCities<-read.csv("input/world_cities_province.csv")
+# Subset to only include cities in the U.S.
+WorldCities<-WorldCities[which(WorldCities[,"COUNTRY"]=="United States"),]
+# Extract unique cities in the United States
+Cities<-unique(WorldCities[,c("city_name","name","latitude","longitude")])
+# Assign column names
+colnames(Cities)<-c("city","state","latitude","longitude")
+# Create unique character strings of city|state name and locations (based on lat long)
+CityState<-apply(Cities, 1, function(x) paste(x, collapse="|"))
+# Add a space at the end of all city names and admin titles to improve grep accuracy
+Cities[,"city"]<-paste(Cities[,"city"]," ",sep="")
+    
+# Extract FormationData SubsetDeepDive rows for grep search
+FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
+# Only search sentences which are less than or equal to 350 characters in length
+ShortSentences<-which(sapply(FormationSentences, function(x) nchar(x)<=350))
+FormationSentences<-FormationSentences[ShortSentences]
+# Subset FormationData to only include short sentences
+SubsetFormData<-FormationData[ShortSentences,]
+    
+# Clean the sentences to prepare for grep
+CleanedWords<-gsub(","," ",FormationSentences)
+# Replace all periods in CleanedWords with spaces to avoid grep errors
+CleanedWords<-gsub("\\."," ",CleanedWords)
+    
+# Search for cities: 
+CityHits<-sapply(Cities[,"city"], function(x) grep(x, perl=TRUE, ignore.case=FALSE, CleanedWords))    
+# Assign names
+names(CityHits)<-CityState
+# Determine which cities had matches 
+CityCheck<-sapply(CityHits, function(x) length(x)>0)
+# Extract those cities and their match data
+CityMatches<-CityHits[which(CityCheck==TRUE)]
+# Extract sentences with cities in them, and their docid, sent id data
+CitySentence<-sapply(unlist(CityMatches), function(x) CleanedWords[x])
+CitySentid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"sentid"])
+CityDocid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"docid"])
+CitySentid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"sentid"])
+# Extract the formation associated with that city
+CityFormation<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"Formation"])
+# Create a city name column
+CityCount<-sapply(CityMatches, length)
+CityStateName<-rep(names(CityMatches), times=CityCount)
+# Split CityCountryName back into separated cities and countries  
+CityStateNameSplit<-sapply(CityStateName, function(x) strsplit(x,'\\|'))
+# Create a CityName column
+CityName<-sapply(CityStateNameSplit, function(x) x[1])
+# Create a state column
+state<-sapply(CityStateNameSplit, function(x) x[2])
+# Create a latitude column
+latitude<-sapply(CityStateNameSplit, function(x) as.numeric(x[3]))
+# Create a longitude column
+longitude<-sapply(CityStateNameSplit, function(x) as.numeric(x[4]))
+# Bind this data into a dataframe
+CityData<-as.data.frame(cbind(CityName,latitude ,longitude ,state ,CityFormation,CityDocid,CitySentid,CitySentence))
+# Reformat CityData
+CityData[,"CityName"]<-as.character(CityData[,"CityName"])
+CityData[,"latitude"]<-as.numeric(as.character(CityData[,"latitude"]))
+CityData[,"longitude"]<-as.numeric(as.character(CityData[,"longitude"]))
+CityData[,"state"]<-as.character(CityData[,"state"])   
+CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
+CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
+CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
+colnames(CityData)<-c("CityName","latitude","longitude","state","Formation","docid","sentid","Sentence")
+rownames(CityData)<-NULL
+    
+# Subset DeepDiveData to only include documents in CityData table
+LocationDeepDive<-subset(DeepDiveData, DeepDiveData[,"docid"]%in%CityData[,"docid"])
+# Clean LocationDeepDive words column to prepare for grep
+CleanedLocationWords<-gsub(","," ",LocationDeepDive[,"words"])
+# Search for state names in CleanedLocationWords
+StateHits<-parSapply(Cluster,unique(CityData[,"state"]),function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
+# Extract the documents each state is found in 
+StateDocs<-sapply(StateHits, function(x) unique(LocationDeepDive[x,"docid"]))
+    
+# Create a matrix of tuples of states and docids
+# Make a state name column for tuples matrix    
+StatesLength<-sapply(StateDocs, length)
+state<-rep(names(StateDocs),times=StatesLength)   
+# Make a docid column for tuples
+docid<-unlist(StateDocs)
+# Bind state and docid data
+StateTuples<-cbind(state,docid)
+
+# Add collapsed state, docid tuples to both CityData and StateTuples
+
+CandidateStateDocs<-apply(CityData[,c("state","docid")], 1, function(x) paste(x, collapse="|"))
+CityData<-cbind(CityData,CandidateStateDocs)
+
+MatchedStateDocs<-apply(StateTuples, 1, function(x) paste(x, collapse="|"))
+StateTuples<-cbind(StateTuples,MatchedStateDocs)
+    
+# Verify that the formation/city match is correct by making sure that the state/docid tuple in CityData is also found in StateTuples
+CleanedCityData<-CityData[which(CityData[,"CandidateStateDocs"]%in%StateTuples[,"MatchedStateDocs"]),]  
+    
+    
