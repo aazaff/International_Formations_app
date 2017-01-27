@@ -6,6 +6,7 @@
 # Save and print the app start time
 Start<-print(Sys.time())
 
+# If running from UW-Madison
 # Load or install the doParallel package
 if (suppressWarnings(require("doParallel"))==FALSE) {
     install.packages("doParallel",repos="http://cran.cnr.berkeley.edu/");
@@ -25,6 +26,7 @@ if (length(CommandArgument)==0) {
      } else {
      Cluster<-makeCluster(as.numeric(CommandArgument[1]))
      }
+
 #############################################################################################################
 ##################################### DATA DWONLOAD FUNCTIONS, FIDELITY #####################################
 #############################################################################################################
@@ -34,6 +36,7 @@ if (length(CommandArgument)==0) {
 # print current status to terminal 
 print(paste("Load postgres tables",Sys.time()))
 
+# If RUNNING FROM UW-MADISON:
 # Download the config file
 Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
 # Connect to PostgreSQL
@@ -42,18 +45,18 @@ Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Crede
 # Query the sentences fro postgresql
 DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM nlp_sentences_352") 
 
-# If Testing: 
+# IF TESTING IN 402:
+# Download data from Postgres:
 #Driver <- dbDriver("PostgreSQL") # Establish database driver
 #Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
 #DeepDiveData<-dbGetQuery(Connection,"SELECT* FROM pbdb_fidelity.pbdb_fidelity_data")
 
-# RECORD INITIAL STATS
-# INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA: 
-StepOneDescription<-"Initial Data"
-# INITIAL NUMBER OF DOCUMENTS AND ROWS IN DEEPDIVEDATA:
-StepOneDocs<-length((unique(DeepDiveData[,"docid"])))
-StepOneRows<-nrow(DeepDiveData)
-StepOneClusters<-0
+# Record initial stats
+Description1<-"Initial Data"
+# Initial number of documents and rows in DeepDiveData
+Docs1<-length((unique(DeepDiveData[,"docid"])))
+Rows1<-nrow(DeepDiveData)
+Clusters1<-0
 
 #############################################################################################################
 ###################################### DATA CLEANING FUNCTIONS, FIDELITY ####################################
@@ -79,28 +82,22 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
 #############################################################################################################
-# Search for the word formation
-grepFormation<-function(Data) {
-    Output<-grep(" formation",Data,ignore.case=TRUE,perl=TRUE)
-    return(Output)
-    }
 
 ########################################### Formation Search Script #########################################
 # print current status 
 print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.time()))
 
 # Apply grep to the object cleaned words
-FormationHits<-parSapply(Cluster,CleanedDDWords,grepFormation)
-
+FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
 # Extact DeepDiveData rows corresponding with formation hits
 SubsetDeepDive<-DeepDiveData[FormationHits,]
-    
-# Record the number of documents and rows in subset deep dive 
-StepFourDescription<-"Subset DeepDiveData to rows which contain the word 'formation'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepFourDocs<-length((unique(SubsetDeepDive[,"docid"])))
-StepFourRows<-nrow(SubsetDeepDive)
-StepFourClusters<-0
+
+# Update the stats table
+Description2<-"Subset DeepDiveData to rows which contain the word 'formation'"
+# Record number of documents and rows in SubsetDeepDive:
+Docs2<-length((unique(SubsetDeepDive[,"docid"])))
+Rows2<-nrow(SubsetDeepDive)
+Clusters2<-0
 
 #############################################################################################################
 ####################################### NNP CLUSTER FUNCTIONS, FIDELITY #####################################
@@ -121,14 +118,14 @@ SubsetDeepDive[,"poses"]<-gsub("\"","SLASH",SubsetDeepDive[,"poses"])
 print(paste("Extract NNPs from SubsetDeepDive rows",Sys.time()))
 
 # Create a list of vectors showing each formation hit sentence's unlisted poses column 
-DeepDivePoses<-sapply(SubsetDeepDive[,"poses"],function(x) unlist(strsplit(as.character(x)," ")))
+DeepDivePoses<-parSapply(Cluster, SubsetDeepDive[,"poses"],function(x) unlist(strsplit(as.character(x)," ")))
 # Assign names to each list element corresponding to the document and sentence id of each sentence
 doc.sent<-paste(SubsetDeepDive[,"docid"],SubsetDeepDive[,"sentid"],sep=".")
 names(DeepDivePoses)<-doc.sent
 
 # Extract all the NNPs from DeepDivePoses
 # NOTE: Search for CC as to get hits like "Middendorf And Black Creek Formations" which is NNP, CC, NNP, NNP, NNP
-DeepDiveNNPs<-sapply(DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
+DeepDiveNNPs<-parSapply(Cluster, DeepDivePoses,function(x) which(x=="NNP"|x=="CC"))
     
 # print current status to terminal
 print(paste("Find consecutive NNPs in DeepDiveNNPs",Sys.time()))
@@ -166,7 +163,7 @@ ClusterData[,"sentid"]<-as.numeric(as.character(ClusterData[,"sentid"]))
 # Create a vector of the number of rows in ClusterData.
 NumClusterVector<-1:nrow(ClusterData)   
 # Extract the proper SubsetDeepDive rows based on the data in ClusterData    
-SubsetDeepDiveRow<-sapply(NumClusterVector,function(x) which(SubsetDeepDive[,"docid"]==ClusterData[x,"docid"]&SubsetDeepDive[,"sentid"]==ClusterData[x,"sentid"]))
+SubsetDeepDiveRow<-parSapply(Cluster, NumClusterVector,function(x) which(SubsetDeepDive[,"docid"]==ClusterData[x,"docid"]&SubsetDeepDive[,"sentid"]==ClusterData[x,"sentid"]))
 # Bind row data to ClusterData and convert it into a dataframe
 ClusterData<-cbind(ClusterData,SubsetDeepDiveRow)
 ClusterData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(ClusterData[,"SubsetDeepDiveRow"]))
@@ -188,16 +185,15 @@ NNPWords<-sapply(ClusterWords, function(x) paste(array(x), collapse=" "))
 ClusterData[,"NNPWords"]<-NNPWords
     
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepEightDescription<-"Extract NPP clusters from SubsetDeepDive rows"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepEightDocs<-length(unique(ClusterData[,"docid"]))
-StepEightRows<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
-StepEightClusters<-nrow(ClusterData)
+Description3<-"Extract NPP clusters from SubsetDeepDive rows"
+# Record number of documents and rows in SubsetDeepDive:
+Docs3<-length(unique(ClusterData[,"docid"]))
+Rows3<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
+Clusters3<-nrow(ClusterData)
 
 #############################################################################################################
 ##################################### FORMATION CLUSTERS FUNCTIONS, FIDELITY ################################
-#############################################################################################################    
+############################################################################################################# 
 # Capitalization function from stack exchane
 simpleCap <- function(x) {
   s <- strsplit(x, " ")[[1]]
@@ -216,12 +212,11 @@ FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
     
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepNineDescription<-"Extract NNP clusters containing the word 'formation'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepNineDocs<-length(unique(FormationData[,"docid"]))
-StepNineRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-StepNineClusters<-nrow(FormationData)
+Description4<-"Extract NNP clusters containing the word 'formation'"
+# Record number of documents and rows in SubsetDeepDive:
+Docs4<-length(unique(FormationData[,"docid"]))
+Rows4<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Clusters4<-nrow(FormationData)
     
 # print current status to terminal
 print(paste("Capitalize formation names appropriately",Sys.time()))
@@ -260,15 +255,14 @@ FormationData[Singular,"NNPWords"]<-FormationCut
 FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
  
 # Update the stats table
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepTwelveDescription<-"Remove rows that are just the word 'Formation'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepTwelveDocs<-length(unique(FormationData[,"docid"]))
-StepTwelveRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-StepTwelveClusters<-nrow(FormationData)        
+Description5<-"Remove rows that are just the word 'Formation'"
+# Record number of documents and rows in SubsetDeepDive:
+Docs5<-length(unique(FormationData[,"docid"]))
+Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Clusters5<-nrow(FormationData)        
        
 # STEP THIRTEEN: Split the NNPClusters where there is an "And"
-SplitFormations<-strsplit(FormationData[,"NNPWords"],'And')
+SplitFormations<-strsplit(FormationData[,"NNPWords"],'And ')
 # Remove the blanks created by the splitting
 SplitFormationsClean<-sapply(SplitFormations,function(x) unlist(x)[unlist(x)!=""])   
 # SplitFormations is a list of the split clusters. Figure out which clusters were split at "And" using length.
@@ -294,13 +288,12 @@ FormationHalves<-grep("Formation",FormationData[,"Formation"], perl=TRUE, ignore
 # Paste "Formation" to all of the non FormationHalves rows
 FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
     
-# RECORD STATS
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepThirteenDescription<-"Split NNPClusters at 'And'"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepThirteenDocs<-length(unique(FormationData[,"docid"]))
-StepThirteenRows<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-StepThirteenClusters<-nrow(FormationData)
+# Update the stats table
+Description6<-"Split NNPClusters at 'And'"
+# Record number of documents and rows in SubsetDeepDive:
+Docs6<-length(unique(FormationData[,"docid"]))
+Rows6<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Clusters6<-nrow(FormationData)
   
 # STEP FOURTEEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
 print(paste("Remove Formations > 5 or = 1 word(s) in length",Sys.time()))
@@ -311,13 +304,12 @@ BadFormations<-which(WordLength>5|WordLength==1)
 # Remove those rows from FormationData
 FormationData<-FormationData[-BadFormations,]
 
-# RECORD STATS
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE: 
-StepFourteenDescription<-"Remove Formations > 5 words in length"
-# NUMBER OF DOCUMENTS AND ROWS IN SUBSETDEEPDIVE:
-StepFourteenDocs<-length(unique(FormationData[,"docid"]))
-StepFourteenRows<-dim(unique(FormationData[,c("docid","sentid")]))[1]
-StepFourteenClusters<-nrow(FormationData) 
+# Update the stats table
+Description7<-"Remove Formations > 5 words in length"
+# Record number of documents and rows in SubsetDeepDive:
+Docs7<-length(unique(FormationData[,"docid"]))
+Rows7<-dim(unique(FormationData[,c("docid","sentid")]))[1]
+Clusters7<-nrow(FormationData) 
 
 # STEP FIFTEEN: Clean FormationData
 print(paste("Clean FormationData",Sys.time()))
@@ -367,7 +359,12 @@ StepSeventeenRows<-dim(unique(FossilData[,c("docid","sentid")]))[1]
     
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
+# Download WorldCities data 
+# If testing in 402: 
+#WorldCities<-read.csv("~/Documents/DeepDive/International_Formations/input/world_cities_province.csv")
+WorldCities<-read.csv("input/world_cities_province.csv")
 
+    
 WorldCities<-read.csv("~/Documents/DeepDive/world_cities_country.csv")    
 # Extract unique city, country tuples
 Cities<-unique(WorldCities[,c("city_name","admin","latitude","longitude")])
@@ -454,10 +451,10 @@ print(paste("Writing Outputs",Sys.time()))
 FossilData<-FossilData[,c("Formation","docid","sentid","Sentence")]
    
 # Return formation stats table 
-StepDescription<-c(StepOneDescription, StepFourDescription, StepEightDescription, StepNineDescription, StepTwelveDescription, StepThirteenDescription, StepFourteenDescription)
-NumberDocuments<-c(StepOneDocs, StepFourDocs, StepEightDocs, StepNineDocs, StepTwelveDocs, StepThirteenDocs, StepFourteenDocs)
-NumberRows<-c(StepOneRows, StepFourRows, StepEightRows, StepNineRows, StepTwelveRows, StepThirteenRows, StepFourteenRows)
-NumberClusters<-c(StepOneClusters, StepFourClusters, StepEightClusters, StepNineClusters, StepTwelveClusters, StepThirteenClusters, StepFourteenClusters) 
+StepDescription<-c(Description1, Description2, Description3, Description4, Description5, Description6, Description7)
+NumberDocuments<-c(Docs1, Docs2, Docs3, Docs4, Docs5, Docs6, Docs7)
+NumberRows<-c(Rows1, Rows2, Rows3, Rows4, Rows5, Rows6, Rows7)
+NumberClusters<-c(Clusters1, Clusters2, Clusters3, Clusters4, Clusters5, Clusters6, Clusters7) 
 # Bind formation stats columns
 FormationStats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)  
 
