@@ -481,4 +481,34 @@ CityDataFormationState<-MacroCityData[,c("Formation","state")]
 # From Macrostrat:
 MacroFormationState<-SubsetUnitsFrame[,c("Fm","location")]    
 
+# Split all of the MacroFormationState locations
+SplitMacroStates<-sapply(MacroFormationState[,"location"], function(x) strsplit(x, ' '))
+# Assign associated formation names to split states
+names(SplitMacroStates)<-MacroFormationState[,"Fm"]
+# Find the number of locations for each formation name
+LengthMacroStates<-sapply(SplitMacroStates, length)
+# Make a unique formation name column for MacroFormationState data 
+MacroFormations<-rep(names(SplitMacroStates), times=LengthMacroStates)    
+# Make a unique location name column for MacroFormationState data
+MacroStates<-unlist(SplitMacroStates)
+# Bind formation and locatioin data from Macrostrat
+MacroFormationState<-cbind(MacroFormations,MacroStates)
+# Assign column names
+colnames(MacroFormationState)<-c("Formation","state")
+# Remove row names
+rownames(MacroFormationState)<-NULL
+# Remove duplicate data
+MacroFormationState<-unique(MacroFormationState)
+    
+# Add collapsed formation|location columns to both MacroFormationState and CityDataFormationState matrices
+MacroPaste<-apply(MacroFormationState, 1, function(x) paste(x, collapse="|"))
+CityDataPaste<-apply(CityDataFormationState, 1, function(x) paste(x, collapse="|"))
+# Bind data to MacroFormationState and CityDataFormationState
+MacroFormationState<-cbind(MacroFormationState,MacroPaste)
+CityDataFormationState<-cbind(CityDataFormationState,CityDataPaste)
+
+# Check to see which formation,location tuples from CityDataFormationState appear in MacroFormationState
+CheckedCityData<-CityDataFormationState[which(CityDataFormationState[,"CityDataPaste"]%in%MacroFormationState[,"MacroPaste"]),]    
+    
+    
     
