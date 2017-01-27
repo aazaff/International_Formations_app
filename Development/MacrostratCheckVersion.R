@@ -19,6 +19,12 @@ if (suppressWarnings(require("RPostgreSQL"))==FALSE) {
     library("RPostgreSQL");
     }
 
+# Load or install the RCurl package (for Macrostrat check portion of app only)
+if (suppressWarnings(require("RCurl"))==FALSE) {
+    install.packages("RCurl",repos="http://cran.cnr.berkeley.edu/");
+    library("RCurl");
+    }
+
 # Start a cluster for multicore, 3 by default or higher if passed as command line argument
 CommandArgument<-commandArgs(TRUE)
 if (length(CommandArgument)==0) {
@@ -425,5 +431,54 @@ StateTuples<-cbind(StateTuples,MatchedStateDocs)
     
 # Verify that the formation/city match is correct by making sure that the state/docid tuple in CityData is also found in StateTuples
 CleanedCityData<-CityData[which(CityData[,"CandidateStateDocs"]%in%StateTuples[,"MatchedStateDocs"]),]  
+
+# Download and check Macrostrat location data 
+# Download all unit names from Macrostrat Database
+UnitsURL<-paste("https://macrostrat.org/api/units?&project_id=1&response=long&format=csv")
+GotURL<-getURL(UnitsURL)
+UnitsFrame<-read.csv(text=GotURL,header=TRUE)
+
+# Download all units from Macrostrat database at the formation level
+StratURL<-"https://macrostrat.org/api/defs/strat_names?rank=fm&format=csv"
+StratURL<-getURL(StratURL)
+StratFrame<-read.csv(text=StratURL,header=TRUE)
     
+# Load intersected location tuples table 
+Driver <- dbDriver("PostgreSQL") # Establish database driver
+Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
+LocationTuples<-dbGetQuery(Connection,"SELECT* FROM column_locations.intersections") 
+
+# Collapse all locations into one charcter string for each col_id in LocationTuples
+# Extract unique col_ids
+ColID<-unique(LocationTuples[,"col_id"])
+ColIDLocations<-sapply(ColID, function(x) paste(LocationTuples[which(LocationTuples[,"col_id"]==x),"location"], collapse=" "))    
+# Bind data
+LocationTuplesCollapsed<-as.data.frame(cbind(ColID,ColIDLocations))
+# Assign column names
+colnames(LocationTuplesCollapsed)<-c("col_id","location")
+ 
+# Make sure columns are formatted correctly for merge
+LocationTuplesCollapsed[,"col_id"]<-as.numeric(as.character(LocationTuplesCollapsed[,"col_id"]))
+LocationTuplesCollapsed[,"location"]<-as.character(LocationTuplesCollapsed[,"location"]) 
+UnitsFrame[,"col_id"]<-as.numeric(as.character(UnitsFrame[,"col_id"]))
+    
+# merge the Location to UnitsFrame by col_id
+UnitsFrame<-merge(UnitsFrame,LocationTuplesCollapsed,by="col_id", all.x=TRUE)
+    
+# Subset UnitsFrame to only include formations
+UnitsFrame<-subset(UnitsFrame,UnitsFrame[,"strat_name_long"]%in%StratFrame[,"strat_name_long"])
+# Paste the word "Formation" to each UnitsFrame[,"Fm"] column
+UnitsFrame[,"Fm"]<-paste(UnitsFrame[,"Fm"], "Formation", sep=" ")
+    
+# Subset CityData to only formations found in Macrostrat
+MacroCityData<-CleanedCityData[which(CleanedCityData[,"Formation"]%in%UnitsFrame[,"Fm"]),]
+# Subset UnitsFrame to only include formation names from CleanedCityData
+SubsetUnitsFrame<-subset(UnitsFrame, UnitsFrame[,"Fm"]%in%MacroCityData[,"Formation"])
+      
+# Check CityData locations for formations against Macrostrat formation locations
+# From CityData:
+CityDataFormationState<-MacroCityData[,c("Formation","state")]
+# From Macrostrat:
+MacroFormationState<-SubsetUnitsFrame[,c("Fm","location")]    
+
     
