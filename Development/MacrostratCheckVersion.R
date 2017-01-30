@@ -363,7 +363,7 @@ CleanedWords<-gsub(","," ",FormationSentences)
 CleanedWords<-gsub("\\."," ",CleanedWords)
     
 # Search for cities: 
-CityHits<-parSapply(Cluster, Cities[,"city"], function(x,y) grep(x, perl=TRUE, ignore.case=FALSE, y), CleanedWords)    
+CityHits<-parSapply(Cluster, Cities[,"city"], function(x,y) grep(x, y, perl=TRUE, ignore.case=FALSE), CleanedWords)    
 # Assign names
 names(CityHits)<-CityState
 # Determine which cities had matches 
@@ -422,7 +422,6 @@ docid<-unlist(StateDocs)
 StateTuples<-cbind(state,docid)
 
 # Add collapsed state, docid tuples to both CityData and StateTuples
-
 CandidateStateDocs<-apply(CityData[,c("state","docid")], 1, function(x) paste(x, collapse="|"))
 CityData<-cbind(CityData,CandidateStateDocs)
 
