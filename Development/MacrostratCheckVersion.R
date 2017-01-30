@@ -169,7 +169,7 @@ ClusterData[,"sentid"]<-as.numeric(as.character(ClusterData[,"sentid"]))
 # Create a vector of the number of rows in ClusterData.
 NumClusterVector<-1:nrow(ClusterData)   
 # Extract the proper SubsetDeepDive rows based on the data in ClusterData    
-SubsetDeepDiveRow<-parSapply(Cluster, NumClusterVector,function(x) which(SubsetDeepDive[,"docid"]==ClusterData[x,"docid"]&SubsetDeepDive[,"sentid"]==ClusterData[x,"sentid"]))
+SubsetDeepDiveRow<-parSapply(Cluster, NumClusterVector,function(x,y,z) which(y[,"docid"]==z[x,"docid"]&y[,"sentid"]==z[x,"sentid"]), SubsetDeepDive, ClusterData)
 # Bind row data to ClusterData and convert it into a dataframe
 ClusterData<-cbind(ClusterData,SubsetDeepDiveRow)
 ClusterData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(ClusterData[,"SubsetDeepDiveRow"]))
