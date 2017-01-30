@@ -216,6 +216,44 @@ FormationClusters<-grep(" formation",ClusterData[,"NNPWords"],ignore.case=TRUE,p
 # Extract those rows from ClusterData
 FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
+
+# Find non-formation clusters
+PostFmClusters<-ClusterData[-FormationClusters,]
+
+# Search for geologic time interval names in clusters
+TimeURL<-getURL("https://macrostrat.org/api/defs/intervals?all&format=csv")
+Timescales<-read.csv(text=TimeURL)
+# Extract unique interval names
+Intervals<-as.character(unique(Timescales[,"name"]))
+
+# Find NNP clusters containing interval names
+IntervalClusters<-parSapply(Cluster, Intervals, function(x,y) which(x==y), PostFmClusters[,"NNPWords"])
+IntervalData<-PostFmClusters[unique(unlist(IntervalClusters)),]
+
+# Find non-formation, non-age clusters
+PostAgeClusters<-PostFmClusters[-unique(unlist(IntervalClusters)),]
+
+  
+# NOTE: IN OFFICIAL APP CONSIDER SEARCHING FOR OFFICIAL / ALTERNATIVE LOCATION NAMES
+# Search for countries in clusters
+# Load location data
+# If testing in 402: WorldCities<-read.csv("~/Documents/DeepDive/International_Formations/MacrostratTesting/world_cities_province.csv")
+WorldCities<-read.csv("input/world_cities_province.csv")
+# Extract unique country names
+Countries<-unique(WorldCities[,"wc_country"])
+CountryClusters<-parSapply(Cluster, Countries, function(x,y) which(x==y), PostAgeClusters[,"NNPWords"])
+CountryData<-PostAgeClusters[unique(unlist(CountryClusters)),]
+
+# Find non-formation, non-age, non-country clusters
+PostCountryClusters<-PostAgeClusters[-unique(unlist(CountryClusters)),]
+    
+# Search for province/state names in clusters
+Admins<-unique(WorldCities[,"woe_name"])
+AdminClusters<-parSapply(Cluster, Admins, function(x,y) which(x==y), PostCountryClusters[,"NNPWords"])
+AdminData<-PostCountryClusters[unique(unlist(AdminClusters)),]
+    
+# Find non-formation, non-age, non-country, non-admin clusters
+
     
 # Update the stats table
 Description4<-"Extract NNP clusters containing the word 'formation'"
@@ -336,8 +374,6 @@ FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Forma
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
  
-# If testing in 402: WorldCities<-read.csv("~/Documents/DeepDive/International_Formations/MacrostratTesting/world_cities_province.csv")
-WorldCities<-read.csv("input/world_cities_province.csv")
 # Subset to only include cities in the U.S.
 WorldCities<-WorldCities[which(WorldCities[,"wc_country"]=="United States"),]
 # Extract unique cities in the United States
