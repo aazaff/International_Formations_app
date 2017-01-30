@@ -336,12 +336,12 @@ FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Forma
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
  
-# If testing in 402: WorldCities<-read.csv("~/Documents/DeepDive/International_Formations/input/world_cities_province.csv")
+# If testing in 402: WorldCities<-read.csv("~/Documents/DeepDive/International_Formations/MacrostratTesting/world_cities_province.csv")
 WorldCities<-read.csv("input/world_cities_province.csv")
 # Subset to only include cities in the U.S.
-WorldCities<-WorldCities[which(WorldCities[,"COUNTRY"]=="United States"),]
+WorldCities<-WorldCities[which(WorldCities[,"wc_country"]=="United States"),]
 # Extract unique cities in the United States
-Cities<-unique(WorldCities[,c("city_name","name","latitude","longitude")])
+Cities<-unique(WorldCities[,c("city_name","woe_name","wc_latitude","wc_longitude")])
 # Assign column names
 colnames(Cities)<-c("city","state","latitude","longitude")
 # Create unique character strings of city|state name and locations (based on lat long)
@@ -363,7 +363,7 @@ CleanedWords<-gsub(","," ",FormationSentences)
 CleanedWords<-gsub("\\."," ",CleanedWords)
     
 # Search for cities: 
-CityHits<-sapply(Cities[,"city"], function(x) grep(x, perl=TRUE, ignore.case=FALSE, CleanedWords))    
+CityHits<-parSapply(Cluster, Cities[,"city"], function(x,y) grep(x, perl=TRUE, ignore.case=FALSE, y), CleanedWords)    
 # Assign names
 names(CityHits)<-CityState
 # Determine which cities had matches 
