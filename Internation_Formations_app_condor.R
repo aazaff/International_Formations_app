@@ -2,14 +2,16 @@
 # Dependency functions are not embedded in master functions, and are marked with the flag dependency in the documentation
 # []-notation is used wherever possible, and $-notation is avoided.
 
-######################################### Load Required Libraries ###########################################
 # Save and print the app start time
 Start<-print(Sys.time())
+
+######################################### Load Required Libraries ###########################################
+# No libraries at this time.
 
 #############################################################################################################
 ##################################### DATA DWONLOAD FUNCTIONS, FIDELITY #####################################
 #############################################################################################################
-# No funcitons at this time
+# No functions at this time
 
 ########################################### Data Download Script ############################################
 # print current status to terminal 
@@ -49,6 +51,7 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
 #############################################################################################################
+# No functions at this time
 
 ########################################### Formation Search Script #########################################
 # print current status 
@@ -162,7 +165,7 @@ Clusters3<-nrow(ClusterData)
 #############################################################################################################
 ##################################### FORMATION CLUSTERS FUNCTIONS, FIDELITY ################################
 #############################################################################################################    
-# Capitalization function from stack exchane
+# Capitalization function from stack exchange
 simpleCap <- function(x) {
   s <- strsplit(x, " ")[[1]]
   paste(toupper(substring(s, 1,1)), substring(s, 2),
