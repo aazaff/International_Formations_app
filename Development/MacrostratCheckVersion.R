@@ -431,8 +431,11 @@ FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
     
 # STEP SIXTEEN: Merge other cluster data (age, location) into FormationData table
+FormationData<-merge(FormationData, IntervalData[,c("SubsetDeepDiveRow", "CollapsedIntervals")], by="SubsetDeepDiveRow", all.x=TRUE)
+FormationData<-merge(FormationData, CountryData[,c("SubsetDeepDiveRow", "CollapsedCountries")], by="SubsetDeepDiveRow", all.x=TRUE)
+FormationData<-merge(FormationData, AdminData[,c("SubsetDeepDiveRow", "CollapsedAdmins")], by="SubsetDeepDiveRow", all.x=TRUE)
+FormationData<-merge(FormationData, CityData[,c("SubsetDeepDiveRow", "CollapsedCities")], by="SubsetDeepDiveRow", all.x=TRUE)
 
-    
 
     
 #############################################################################################################
