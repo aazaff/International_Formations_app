@@ -437,7 +437,7 @@ FormationData<-merge(FormationData, AdminData[,c("SubsetDeepDiveRow", "Collapsed
 FormationData<-merge(FormationData, CityData[,c("SubsetDeepDiveRow", "CollapsedCities")], by="SubsetDeepDiveRow", all.x=TRUE)
 
 # Assign column names
-colnames(FormationData)<-c("SubsetDeepDiveRow","Formation","ClusterPosition","docid","sentid","country","admin","city")
+colnames(FormationData)<-c("SubsetDeepDiveRow","Formation","ClusterPosition","docid","sentid","age","country","admin","city")
     
 #############################################################################################################
 ####################################### LOCATIONA MATCHING FUNCTIONS, FIDELITY ##############################
