@@ -223,7 +223,10 @@ FormationCut<-gsub("(Formation).*","\\1",FormationData[Singular,"NNPWords"])
 FormationData[Singular,"NNPWords"]<-FormationCut
     
 # Remove FormationData rows which only have "Formation" in the NNPWords column
-FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
+SingleWords<-which(FormationData[,"NNPWords"]=="Formation")
+if (length(SingleWords)>0) {
+  FormationData<-FormationData[-SingleWords,]
+  }
  
 # Update the stats table
 Description5<-"Remove rows that are just the word 'Formation'"
@@ -257,7 +260,9 @@ FormationData[,"sentid"]<-as.numeric(as.character(FormationData[,"sentid"]))
 # Determine the split clusters that DO contain the word "Formation"
 FormationHalves<-grep("Formation",FormationData[,"Formation"], perl=TRUE, ignore.case=TRUE)
 # Paste "Formation" to all of the non FormationHalves rows
-FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
+if (length(FormationHalves)>0) {
+    FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
+    }
     
 # Update the stats table
 Description6<-"Split NNPClusters at 'And'"
