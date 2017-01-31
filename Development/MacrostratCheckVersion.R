@@ -229,10 +229,24 @@ Intervals<-as.character(unique(Timescales[,"name"]))
 # Find NNP clusters containing interval names
 IntervalClusters<-parSapply(Cluster, Intervals, function(x,y) which(x==y), PostFmClusters[,"NNPWords"])
 IntervalData<-PostFmClusters[unique(unlist(IntervalClusters)),]
-
+  
+# Collapse duplicate SubsetDeepDiveRows
+# Extract unique SubsetDeepDiveRows 
+SubRow<-unique(IntervalData[,"SubsetDeepDiveRow"])
+# Locate duplicate rows
+DuplicateIntervals<-parSapply(Cluster, SubRow, function(x,y) which(y[,"SubsetDeepDiveRow"]==x), IntervalData)
+# Extract and collapse intervals for duplicates
+CollapsedIntervals<-sapply(DuplicateIntervals, function(x,y) paste(unique(y[x,"NNPWords"]),collapse=","), IntervalData)
+# Bind row location data to collapsed intervals
+IntervalRows<-as.data.frame(cbind(SubRow,CollapsedIntervals))
+# Reformat IntervalRows
+IntervalRows[,"SubRow"]<-as.numeric(as.character(IntervalRows[,"SubRow"]))
+# Merge interval rows to IntervalData by SubsetDeepDiveRow
+IntervalData<-merge(IntervalData, IntervalRows, by.x="SubsetDeepDiveRow", by.y="SubRow", all.x=TRUE)      
+IntervalData<-unique(IntervalData[,c("docid","sentid","SubsetDeepDiveRow","CollapsedIntervals")])
+       
 # Find non-formation, non-age clusters
 PostAgeClusters<-PostFmClusters[-unique(unlist(IntervalClusters)),]
-
   
 # NOTE: IN OFFICIAL APP CONSIDER SEARCHING FOR OFFICIAL / ALTERNATIVE LOCATION NAMES
 # Search for countries in clusters
@@ -243,6 +257,21 @@ WorldCities<-read.csv("input/world_cities_province.csv")
 Countries<-unique(WorldCities[,"wc_country"])
 CountryClusters<-parSapply(Cluster, Countries, function(x,y) which(x==y), PostAgeClusters[,"NNPWords"])
 CountryData<-PostAgeClusters[unique(unlist(CountryClusters)),]
+    
+# Collapse duplicate SubsetDeepDiveRows
+# Extract unique SubsetDeepDiveRows 
+SubRow<-unique(CountryData[,"SubsetDeepDiveRow"])
+# Locate duplicate rows
+DuplicateCountries<-parSapply(Cluster, SubRow, function(x,y) which(y[,"SubsetDeepDiveRow"]==x), CountryData)
+# Extract and collapse countries for duplicates
+CollapsedCountries<-sapply(DuplicateCountries, function(x,y) paste(unique(y[x,"NNPWords"]),collapse=","), CountryData)
+# Bind row location data to collapsed countries
+CountryRows<-as.data.frame(cbind(SubRow,CollapsedCountries))
+# Reformat IntervalRows
+CountryRows[,"SubRow"]<-as.numeric(as.character(CountryRows[,"SubRow"]))
+# Merge interval rows to CountryData by SubsetDeepDiveRow
+CountryData<-merge(CountryData, CountryRows, by.x="SubsetDeepDiveRow", by.y="SubRow", all.x=TRUE)      
+CountryData<-unique(CountryData[,c("docid","sentid","SubsetDeepDiveRow","CollapsedCountries")])
 
 # Find non-formation, non-age, non-country clusters
 PostCountryClusters<-PostAgeClusters[-unique(unlist(CountryClusters)),]
@@ -252,8 +281,45 @@ Admins<-unique(WorldCities[,"woe_name"])
 AdminClusters<-parSapply(Cluster, Admins, function(x,y) which(x==y), PostCountryClusters[,"NNPWords"])
 AdminData<-PostCountryClusters[unique(unlist(AdminClusters)),]
     
+# Collapse duplicate SubsetDeepDiveRows
+# Extract unique SubsetDeepDiveRows 
+SubRow<-unique(AdminData[,"SubsetDeepDiveRow"])
+# Locate duplicate rows
+DuplicateAdmins<-parSapply(Cluster, SubRow, function(x,y) which(y[,"SubsetDeepDiveRow"]==x), AdminData)
+# Extract and collapse admins for duplicates
+CollapsedAdmins<-sapply(DuplicateAdmins, function(x,y) paste(unique(y[x,"NNPWords"]),collapse=","), AdminData)
+# Bind row location data to collapsed admins
+AdminRows<-as.data.frame(cbind(SubRow,CollapsedAdmins))
+# Reformat AdminRows
+AdminRows[,"SubRow"]<-as.numeric(as.character(AdminRows[,"SubRow"]))
+# Merge interval rows to AdminData by SubsetDeepDiveRow
+AdminData<-merge(AdminData, AdminRows, by.x="SubsetDeepDiveRow", by.y="SubRow", all.x=TRUE)      
+AdminData<-unique(AdminData[,c("docid","sentid","SubsetDeepDiveRow","CollapsedAdmins")])
+    
 # Find non-formation, non-age, non-country, non-admin clusters
-
+PostAdminClusters<-PostCountryClusters[-unique(unlist(AdminClusters)),]
+    
+# Search for city names in clusters
+Cities<-as.character(unique(WorldCities[,"city_name"]))
+CityClusters<-parSapply(Cluster, Cities, function(x,y) which(x==y), PostAdminClusters[,"NNPWords"])
+CityData<-PostAdminClusters[unique(unlist(CityClusters)),]
+    
+# Collapse duplicate SubsetDeepDiveRows
+# Extract unique SubsetDeepDiveRows 
+SubRow<-unique(CityData[,"SubsetDeepDiveRow"])
+# Locate duplicate rows
+DuplicateCities<-parSapply(Cluster, SubRow, function(x,y) which(y[,"SubsetDeepDiveRow"]==x), CityData)
+# Extract and collapse admins for duplicates
+CollapsedCities<-sapply(DuplicateCities, function(x,y) paste(unique(y[x,"NNPWords"]),collapse=","), CityData)
+# Bind row location data to collapsed admins
+CityRows<-as.data.frame(cbind(SubRow,CollapsedCities))
+# Reformat AdminRows
+CityRows[,"SubRow"]<-as.numeric(as.character(CityRows[,"SubRow"]))
+# Merge interval rows to AdminData by SubsetDeepDiveRow
+CityData<-merge(CityData, CityRows, by.x="SubsetDeepDiveRow", by.y="SubRow", all.x=TRUE)      
+CityData<-unique(CityData[,c("docid","sentid","SubsetDeepDiveRow","CollapsedCities")])
+    
+PostCityClusters<-PostAdminClusters[-unique(unlist(CityClusters)),]
     
 # Update the stats table
 Description4<-"Extract NNP clusters containing the word 'formation'"
@@ -363,6 +429,11 @@ FormationData[,"Formation"]<-trimws(FormationData[,"Formation"], which=c("both")
 FormationData[,"Formation"]<-gsub("  "," ",FormationData[,"Formation"])
 # Remove s in "Formations" where necessary
 FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Formation"])
+    
+# STEP SIXTEEN: Merge other cluster data (age, location) into FormationData table
+
+    
+
     
 #############################################################################################################
 ####################################### LOCATIONA MATCHING FUNCTIONS, FIDELITY ##############################
