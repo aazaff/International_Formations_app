@@ -373,6 +373,8 @@ PostAgeClusters<-PostFmClusters[-unique(unlist(IntervalClusters)),]
 WorldCities<-read.csv("input/world_cities_province.csv")
 # Extract unique country names
 Countries<-unique(WorldCities[,"wc_country"])
+# Remove the blank country name
+Countries<-Countries[which(nchar(as.character(Countries))>0)]
 CountryClusters<-parSapply(Cluster, Countries, function(x,y) which(x==y), PostAgeClusters[,"NNPWords"])
 CountryData<-PostAgeClusters[unique(unlist(CountryClusters)),]
     
@@ -454,7 +456,35 @@ FormationData<-merge(FormationData, CityData[,c("SubsetDeepDiveRow", "CollapsedC
 # Assign column names
 colnames(FormationData)<-c("SubsetDeepDiveRow","Formation","ClusterPosition","docid","sentid","age","country","admin","city")
     
-# STEP SEVENTEEN: 
+# STEP SEVENTEEN:
+print(paste("Search for countries, admins, and cities in documents",Sys.time()))
+
+# Subset DeepDiveData to only include documents in FormationData table
+LocationDeepDive<-subset(DeepDiveData, DeepDiveData[,"docid"]%in%FormationData[,"docid"])
+# Clean LocationDeepDive words column to prepare for grep
+CleanedLocationWords<-gsub(","," ",LocationDeepDive[,"words"])
+# Search for country names in all LocationDeepDive documents
+CountryHits<-parSapply(Cluster, as.character(Countries),function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
+# Remove countries from CountryHits which have no matches in LocationDeepDive
+CountryCheck<-sapply(CountryHits, function(x) length(x)>0)
+CountryHits<-CountryHits[which(CountryCheck==TRUE)]
+    
+# Extract the docids for the matches 
+CountryDocs<-sapply(CountryHits, function(x) unique(LocationDeepDive[x,"docid"]))
+# Make a column of country names
+Country<-rep(names(CountryDocs), times= sapply(CountryDocs, length))
+# Make a column of docids
+docid<-unlist(CountryDocs)
+# Bind the columns
+CountryDocData<-cbind(Country, docid)
+    
+ # Search for state names in CleanedLocationWords
+    
+
+# Extract the documents each state is found in 
+    
+    
+    
 
     
     
@@ -465,6 +495,17 @@ colnames(FormationData)<-c("SubsetDeepDiveRow","Formation","ClusterPosition","do
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+       
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
 print(paste("Search for locations in FormationData sentences",Sys.time()))   
  
@@ -478,7 +519,13 @@ colnames(Cities)<-c("city","state","latitude","longitude")
 CityState<-apply(Cities, 1, function(x) paste(x, collapse="|"))
 # Add a space at the end of all city names and admin titles to improve grep accuracy
 Cities[,"city"]<-paste(Cities[,"city"]," ",sep="")
+
     
+    
+    
+    
+    
+   
 # Extract FormationData SubsetDeepDive rows for grep search
 FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
 # Only search sentences which are less than or equal to 350 characters in length
