@@ -104,6 +104,18 @@ Description2<-"Subset DeepDiveData to rows which contain the word 'formation'"
 Docs2<-length((unique(SubsetDeepDive[,"docid"])))
 Rows2<-nrow(SubsetDeepDive)
 Clusters2<-0
+    
+# Remove SubsetDeepDive sentences that are more than 350 characters in length
+ShortSent<-sapply(SubsetDeepDive[,"words"], function(x) as.character(nchar(x)<=350))
+# Remove sentences that exceed the character limit from SubsetDeepDive
+SubsetDeepDive<-SubsetDeepDive[which(ShortSent==TRUE),]
+    
+# Update the stats table
+Description3<-"Remove sentences exceeding 350 characters"
+# Record number of documents and rows in SubsetDeepDive:
+Docs3<-length((unique(SubsetDeepDive[,"docid"])))
+Rows3<-nrow(SubsetDeepDive)
+Clusters3<-0
 
 #############################################################################################################
 ####################################### NNP CLUSTER FUNCTIONS, FIDELITY #####################################
@@ -191,11 +203,11 @@ NNPWords<-sapply(ClusterWords, function(x) paste(array(x), collapse=" "))
 ClusterData[,"NNPWords"]<-NNPWords
     
 # Update the stats table
-Description3<-"Extract NPP clusters from SubsetDeepDive rows"
+Description4<-"Extract NPP clusters from SubsetDeepDive rows"
 # Record number of documents and rows in SubsetDeepDive:
-Docs3<-length(unique(ClusterData[,"docid"]))
-Rows3<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
-Clusters3<-nrow(ClusterData)
+Docs4<-length(unique(ClusterData[,"docid"]))
+Rows4<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
+Clusters4<-nrow(ClusterData)
 
 #############################################################################################################
 ##################################### FORMATION CLUSTERS FUNCTIONS, FIDELITY ################################
@@ -218,11 +230,11 @@ FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
     
 # Update the stats table
-Description4<-"Extract NNP clusters containing the word 'formation'"
+Description5<-"Extract NNP clusters containing the word 'formation'"
 # Record number of documents and rows in SubsetDeepDive:
-Docs4<-length(unique(FormationData[,"docid"]))
-Rows4<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-Clusters4<-nrow(FormationData)
+Docs5<-length(unique(FormationData[,"docid"]))
+Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Clusters5<-nrow(FormationData)
     
 # print current status to terminal
 print(paste("Capitalize formation names appropriately",Sys.time()))
@@ -261,11 +273,11 @@ FormationData[Singular,"NNPWords"]<-FormationCut
 FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
  
 # Update the stats table
-Description5<-"Remove rows that are just the word 'Formation'"
+Description6<-"Remove rows that are just the word 'Formation'"
 # Record number of documents and rows in SubsetDeepDive:
-Docs5<-length(unique(FormationData[,"docid"]))
-Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-Clusters5<-nrow(FormationData)        
+Docs6<-length(unique(FormationData[,"docid"]))
+Rows6<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Clusters6<-nrow(FormationData)        
        
 # STEP THIRTEEN: Split the NNPClusters where there is an "And"
 SplitFormations<-strsplit(FormationData[,"NNPWords"],'And ')
@@ -295,11 +307,11 @@ FormationHalves<-grep("Formation",FormationData[,"Formation"], perl=TRUE, ignore
 FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalves,"Formation"], "Formation", sep=" ")
     
 # Update the stats table
-Description6<-"Split NNPClusters at 'And'"
+Description7<-"Split NNPClusters at 'And'"
 # Record number of documents and rows in SubsetDeepDive:
-Docs6<-length(unique(FormationData[,"docid"]))
-Rows6<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-Clusters6<-nrow(FormationData)
+Docs7<-length(unique(FormationData[,"docid"]))
+Rows7<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Clusters7<-nrow(FormationData)
   
 # STEP FOURTEEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
 print(paste("Remove Formations > 5 or = 1 word(s) in length",Sys.time()))
@@ -311,11 +323,11 @@ BadFormations<-which(WordLength>5|WordLength==1)
 FormationData<-FormationData[-BadFormations,]
 
 # Update the stats table
-Description7<-"Remove Formations > 5 words in length"
+Description8<-"Remove Formations > 5 words in length"
 # Record number of documents and rows in SubsetDeepDive:
-Docs7<-length(unique(FormationData[,"docid"]))
-Rows7<-dim(unique(FormationData[,c("docid","sentid")]))[1]
-Clusters7<-nrow(FormationData) 
+Docs8<-length(unique(FormationData[,"docid"]))
+Rows8<-dim(unique(FormationData[,c("docid","sentid")]))[1]
+Clusters8<-nrow(FormationData) 
 
 # STEP FIFTEEN: Clean FormationData
 print(paste("Clean FormationData",Sys.time()))
