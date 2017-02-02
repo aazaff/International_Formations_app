@@ -553,187 +553,186 @@ colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosit
     
     
     
+  
+    
+    
+    
+    
     
        
 # STEP EIGHTEEN: Search for locations that oc-occur in sentences with formations.    
-print(paste("Search for locations in FormationData sentences",Sys.time()))   
+#print(paste("Search for locations in FormationData sentences",Sys.time()))   
  
 # Subset to only include cities in the U.S.
-WorldCities<-WorldCities[which(WorldCities[,"wc_country"]=="United States"),]
+#WorldCities<-WorldCities[which(WorldCities[,"wc_country"]=="United States"),]
 # Extract unique cities in the United States
-Cities<-unique(WorldCities[,c("city_name","woe_name","wc_latitude","wc_longitude")])
+#Cities<-unique(WorldCities[,c("city_name","woe_name","wc_latitude","wc_longitude")])
 # Assign column names
-colnames(Cities)<-c("city","state","latitude","longitude")
+#colnames(Cities)<-c("city","state","latitude","longitude")
 # Create unique character strings of city|state name and locations (based on lat long)
-CityState<-apply(Cities, 1, function(x) paste(x, collapse="|"))
+#CityState<-apply(Cities, 1, function(x) paste(x, collapse="|"))
 # Add a space at the end of all city names and admin titles to improve grep accuracy
-Cities[,"city"]<-paste(Cities[,"city"]," ",sep="")
-
-    
-    
-    
-    
-    
+#Cities[,"city"]<-paste(Cities[,"city"]," ",sep="")
    
 # Extract FormationData SubsetDeepDive rows for grep search
-FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
+#FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
 # Only search sentences which are less than or equal to 350 characters in length
-ShortSentences<-which(sapply(FormationSentences, function(x) nchar(x)<=350))
-FormationSentences<-FormationSentences[ShortSentences]
+#ShortSentences<-which(sapply(FormationSentences, function(x) nchar(x)<=350))
+#FormationSentences<-FormationSentences[ShortSentences]
 # Subset FormationData to only include short sentences
-SubsetFormData<-FormationData[ShortSentences,]
+#SubsetFormData<-FormationData[ShortSentences,]
     
 # Clean the sentences to prepare for grep
-CleanedWords<-gsub(","," ",FormationSentences)
+#CleanedWords<-gsub(","," ",FormationSentences)
 # Replace all periods in CleanedWords with spaces to avoid grep errors
-CleanedWords<-gsub("\\."," ",CleanedWords)
+#CleanedWords<-gsub("\\."," ",CleanedWords)
     
 # Search for cities: 
-CityHits<-parSapply(Cluster, Cities[,"city"], function(x,y) grep(x, y, perl=TRUE, ignore.case=FALSE), CleanedWords)    
+#CityHits<-parSapply(Cluster, Cities[,"city"], function(x,y) grep(x, y, perl=TRUE, ignore.case=FALSE), CleanedWords)    
 # Assign names
-names(CityHits)<-CityState
+#names(CityHits)<-CityState
 # Determine which cities had matches 
-CityCheck<-sapply(CityHits, function(x) length(x)>0)
+#CityCheck<-sapply(CityHits, function(x) length(x)>0)
 # Extract those cities and their match data
-CityMatches<-CityHits[which(CityCheck==TRUE)]
+#CityMatches<-CityHits[which(CityCheck==TRUE)]
 # Extract sentences with cities in them, and their docid, sent id data
-CitySentence<-sapply(unlist(CityMatches), function(x) CleanedWords[x])
-CitySentid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"sentid"])
-CityDocid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"docid"])
-CitySentid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"sentid"])
+#CitySentence<-sapply(unlist(CityMatches), function(x) CleanedWords[x])
+#CitySentid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"sentid"])
+#CityDocid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"docid"])
+#CitySentid<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"sentid"])
 # Extract the formation associated with that city
-CityFormation<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"Formation"])
+#CityFormation<-sapply(unlist(CityMatches), function(x) SubsetFormData[x,"Formation"])
 # Create a city name column
-CityCount<-sapply(CityMatches, length)
-CityStateName<-rep(names(CityMatches), times=CityCount)
+#CityCount<-sapply(CityMatches, length)
+#CityStateName<-rep(names(CityMatches), times=CityCount)
 # Split CityCountryName back into separated cities and countries  
-CityStateNameSplit<-sapply(CityStateName, function(x) strsplit(x,'\\|'))
+#CityStateNameSplit<-sapply(CityStateName, function(x) strsplit(x,'\\|'))
 # Create a CityName column
-CityName<-sapply(CityStateNameSplit, function(x) x[1])
+#CityName<-sapply(CityStateNameSplit, function(x) x[1])
 # Create a state column
-state<-sapply(CityStateNameSplit, function(x) x[2])
+#state<-sapply(CityStateNameSplit, function(x) x[2])
 # Create a latitude column
-latitude<-sapply(CityStateNameSplit, function(x) as.numeric(x[3]))
+#latitude<-sapply(CityStateNameSplit, function(x) as.numeric(x[3]))
 # Create a longitude column
-longitude<-sapply(CityStateNameSplit, function(x) as.numeric(x[4]))
+#longitude<-sapply(CityStateNameSplit, function(x) as.numeric(x[4]))
 # Bind this data into a dataframe
-CityData<-as.data.frame(cbind(CityName,latitude ,longitude ,state ,CityFormation,CityDocid,CitySentid,CitySentence))
+#CityData<-as.data.frame(cbind(CityName,latitude ,longitude ,state ,CityFormation,CityDocid,CitySentid,CitySentence))
 # Reformat CityData
-CityData[,"CityName"]<-as.character(CityData[,"CityName"])
-CityData[,"latitude"]<-as.numeric(as.character(CityData[,"latitude"]))
-CityData[,"longitude"]<-as.numeric(as.character(CityData[,"longitude"]))
-CityData[,"state"]<-as.character(CityData[,"state"])   
-CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
-CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
-CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
-colnames(CityData)<-c("CityName","latitude","longitude","state","Formation","docid","sentid","Sentence")
-rownames(CityData)<-NULL
+#CityData[,"CityName"]<-as.character(CityData[,"CityName"])
+#CityData[,"latitude"]<-as.numeric(as.character(CityData[,"latitude"]))
+#CityData[,"longitude"]<-as.numeric(as.character(CityData[,"longitude"]))
+#CityData[,"state"]<-as.character(CityData[,"state"])   
+#CityData[,"CityFormation"]<-as.character(CityData[,"CityFormation"])
+#CityData[,"CityDocid"]<-as.character(CityData[,"CityDocid"])
+#CityData[,"CitySentid"]<-as.numeric(as.character(CityData[,"CitySentid"]))
+#colnames(CityData)<-c("CityName","latitude","longitude","state","Formation","docid","sentid","Sentence")
+#rownames(CityData)<-NULL
     
 # Subset DeepDiveData to only include documents in CityData table
-LocationDeepDive<-subset(DeepDiveData, DeepDiveData[,"docid"]%in%CityData[,"docid"])
+#LocationDeepDive<-subset(DeepDiveData, DeepDiveData[,"docid"]%in%CityData[,"docid"])
 # Clean LocationDeepDive words column to prepare for grep
-CleanedLocationWords<-gsub(","," ",LocationDeepDive[,"words"])
+#CleanedLocationWords<-gsub(","," ",LocationDeepDive[,"words"])
 # Search for state names in CleanedLocationWords
-StateHits<-parSapply(Cluster,unique(CityData[,"state"]),function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
+#StateHits<-parSapply(Cluster,unique(CityData[,"state"]),function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
 # Extract the documents each state is found in 
-StateDocs<-sapply(StateHits, function(x) unique(LocationDeepDive[x,"docid"]))
+#StateDocs<-sapply(StateHits, function(x) unique(LocationDeepDive[x,"docid"]))
     
 # Create a matrix of tuples of states and docids
 # Make a state name column for tuples matrix    
-StatesLength<-sapply(StateDocs, length)
-state<-rep(names(StateDocs),times=StatesLength)   
+#StatesLength<-sapply(StateDocs, length)
+#state<-rep(names(StateDocs),times=StatesLength)   
 # Make a docid column for tuples
-docid<-unlist(StateDocs)
+#docid<-unlist(StateDocs)
 # Bind state and docid data
-StateTuples<-cbind(state,docid)
+#StateTuples<-cbind(state,docid)
 
 # Add collapsed state, docid tuples to both CityData and StateTuples
-CandidateStateDocs<-apply(CityData[,c("state","docid")], 1, function(x) paste(x, collapse="|"))
-CityData<-cbind(CityData,CandidateStateDocs)
+#CandidateStateDocs<-apply(CityData[,c("state","docid")], 1, function(x) paste(x, collapse="|"))
+#CityData<-cbind(CityData,CandidateStateDocs)
 
-MatchedStateDocs<-apply(StateTuples, 1, function(x) paste(x, collapse="|"))
-StateTuples<-cbind(StateTuples,MatchedStateDocs)
+#MatchedStateDocs<-apply(StateTuples, 1, function(x) paste(x, collapse="|"))
+#StateTuples<-cbind(StateTuples,MatchedStateDocs)
     
 # Verify that the formation/city match is correct by making sure that the state/docid tuple in CityData is also found in StateTuples
-CleanedCityData<-CityData[which(CityData[,"CandidateStateDocs"]%in%StateTuples[,"MatchedStateDocs"]),]  
+#CleanedCityData<-CityData[which(CityData[,"CandidateStateDocs"]%in%StateTuples[,"MatchedStateDocs"]),]  
 
 # Download and check Macrostrat location data 
 # Download all unit names from Macrostrat Database
-UnitsURL<-paste("https://macrostrat.org/api/units?&project_id=1&response=long&format=csv")
-GotURL<-getURL(UnitsURL)
-UnitsFrame<-read.csv(text=GotURL,header=TRUE)
+#UnitsURL<-paste("https://macrostrat.org/api/units?&project_id=1&response=long&format=csv")
+#GotURL<-getURL(UnitsURL)
+#UnitsFrame<-read.csv(text=GotURL,header=TRUE)
 
 # Download all units from Macrostrat database at the formation level
-StratURL<-"https://macrostrat.org/api/defs/strat_names?rank=fm&format=csv"
-StratURL<-getURL(StratURL)
-StratFrame<-read.csv(text=StratURL,header=TRUE)
+#StratURL<-"https://macrostrat.org/api/defs/strat_names?rank=fm&format=csv"
+#StratURL<-getURL(StratURL)
+#StratFrame<-read.csv(text=StratURL,header=TRUE)
     
 # Load intersected location tuples table 
-Driver <- dbDriver("PostgreSQL") # Establish database driver
-Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
-LocationTuples<-dbGetQuery(Connection,"SELECT* FROM column_locations.intersections") 
+#Driver <- dbDriver("PostgreSQL") # Establish database driver
+#Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
+#LocationTuples<-dbGetQuery(Connection,"SELECT* FROM column_locations.intersections") 
 
 # Collapse all locations into one charcter string for each col_id in LocationTuples
 # Extract unique col_ids
-ColID<-unique(LocationTuples[,"col_id"])
-ColIDLocations<-sapply(ColID, function(x) paste(LocationTuples[which(LocationTuples[,"col_id"]==x),"location"], collapse=" "))    
+#ColID<-unique(LocationTuples[,"col_id"])
+#ColIDLocations<-sapply(ColID, function(x) paste(LocationTuples[which(LocationTuples[,"col_id"]==x),"location"], collapse=" "))    
 # Bind data
-LocationTuplesCollapsed<-as.data.frame(cbind(ColID,ColIDLocations))
+#LocationTuplesCollapsed<-as.data.frame(cbind(ColID,ColIDLocations))
 # Assign column names
-colnames(LocationTuplesCollapsed)<-c("col_id","location")
+#colnames(LocationTuplesCollapsed)<-c("col_id","location")
  
 # Make sure columns are formatted correctly for merge
-LocationTuplesCollapsed[,"col_id"]<-as.numeric(as.character(LocationTuplesCollapsed[,"col_id"]))
-LocationTuplesCollapsed[,"location"]<-as.character(LocationTuplesCollapsed[,"location"]) 
-UnitsFrame[,"col_id"]<-as.numeric(as.character(UnitsFrame[,"col_id"]))
+#LocationTuplesCollapsed[,"col_id"]<-as.numeric(as.character(LocationTuplesCollapsed[,"col_id"]))
+#LocationTuplesCollapsed[,"location"]<-as.character(LocationTuplesCollapsed[,"location"]) 
+#UnitsFrame[,"col_id"]<-as.numeric(as.character(UnitsFrame[,"col_id"]))
     
 # merge the Location to UnitsFrame by col_id
-UnitsFrame<-merge(UnitsFrame,LocationTuplesCollapsed,by="col_id", all.x=TRUE)
+#UnitsFrame<-merge(UnitsFrame,LocationTuplesCollapsed,by="col_id", all.x=TRUE)
     
 # Subset UnitsFrame to only include formations
-UnitsFrame<-subset(UnitsFrame,UnitsFrame[,"strat_name_long"]%in%StratFrame[,"strat_name_long"])
+#UnitsFrame<-subset(UnitsFrame,UnitsFrame[,"strat_name_long"]%in%StratFrame[,"strat_name_long"])
 # Paste the word "Formation" to each UnitsFrame[,"Fm"] column
-UnitsFrame[,"Fm"]<-paste(UnitsFrame[,"Fm"], "Formation", sep=" ")
+#UnitsFrame[,"Fm"]<-paste(UnitsFrame[,"Fm"], "Formation", sep=" ")
     
 # Subset CityData to only formations found in Macrostrat
-MacroCityData<-CleanedCityData[which(CleanedCityData[,"Formation"]%in%UnitsFrame[,"Fm"]),]
+#MacroCityData<-CleanedCityData[which(CleanedCityData[,"Formation"]%in%UnitsFrame[,"Fm"]),]
 # Subset UnitsFrame to only include formation names from CleanedCityData
-SubsetUnitsFrame<-subset(UnitsFrame, UnitsFrame[,"Fm"]%in%MacroCityData[,"Formation"])
+#SubsetUnitsFrame<-subset(UnitsFrame, UnitsFrame[,"Fm"]%in%MacroCityData[,"Formation"])
       
 # Check CityData locations for formations against Macrostrat formation locations
 # From CityData:
-CityDataFormationState<-MacroCityData[,c("Formation","state")]
+#CityDataFormationState<-MacroCityData[,c("Formation","state")]
 # From Macrostrat:
-MacroFormationState<-SubsetUnitsFrame[,c("Fm","location")]    
+#MacroFormationState<-SubsetUnitsFrame[,c("Fm","location")]    
 
 # Split all of the MacroFormationState locations
-SplitMacroStates<-sapply(MacroFormationState[,"location"], function(x) strsplit(x, ' '))
+#SplitMacroStates<-sapply(MacroFormationState[,"location"], function(x) strsplit(x, ' '))
 # Assign associated formation names to split states
-names(SplitMacroStates)<-MacroFormationState[,"Fm"]
+#names(SplitMacroStates)<-MacroFormationState[,"Fm"]
 # Find the number of locations for each formation name
-LengthMacroStates<-sapply(SplitMacroStates, length)
+#LengthMacroStates<-sapply(SplitMacroStates, length)
 # Make a unique formation name column for MacroFormationState data 
-MacroFormations<-rep(names(SplitMacroStates), times=LengthMacroStates)    
+#MacroFormations<-rep(names(SplitMacroStates), times=LengthMacroStates)    
 # Make a unique location name column for MacroFormationState data
-MacroStates<-unlist(SplitMacroStates)
+#MacroStates<-unlist(SplitMacroStates)
 # Bind formation and locatioin data from Macrostrat
-MacroFormationState<-cbind(MacroFormations,MacroStates)
+#MacroFormationState<-cbind(MacroFormations,MacroStates)
 # Assign column names
-colnames(MacroFormationState)<-c("Formation","state")
+#colnames(MacroFormationState)<-c("Formation","state")
 # Remove row names
-rownames(MacroFormationState)<-NULL
+#rownames(MacroFormationState)<-NULL
 # Remove duplicate data
-MacroFormationState<-unique(MacroFormationState)
+#MacroFormationState<-unique(MacroFormationState)
     
 # Add collapsed formation|location columns to both MacroFormationState and CityDataFormationState matrices
-MacroPaste<-apply(MacroFormationState, 1, function(x) paste(x, collapse="|"))
-CityDataPaste<-apply(CityDataFormationState, 1, function(x) paste(x, collapse="|"))
+#MacroPaste<-apply(MacroFormationState, 1, function(x) paste(x, collapse="|"))
+#CityDataPaste<-apply(CityDataFormationState, 1, function(x) paste(x, collapse="|"))
 # Bind data to MacroFormationState and CityDataFormationState
-MacroFormationState<-cbind(MacroFormationState,MacroPaste)
-CityDataFormationState<-cbind(CityDataFormationState,CityDataPaste)
+#MacroFormationState<-cbind(MacroFormationState,MacroPaste)
+#CityDataFormationState<-cbind(CityDataFormationState,CityDataPaste)
 
 # Check to see which formation,location tuples from CityDataFormationState appear in MacroFormationState
-CheckedCityData<-MacroCityData[which(CityDataFormationState[,"CityDataPaste"]%in%MacroFormationState[,"MacroPaste"]),]    
+#CheckedCityData<-MacroCityData[which(CityDataFormationState[,"CityDataPaste"]%in%MacroFormationState[,"MacroPaste"]),]    
     
     
     
