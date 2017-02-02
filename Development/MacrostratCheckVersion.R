@@ -495,68 +495,80 @@ LocationDeepDive<-subset(DeepDiveData, DeepDiveData[,"docid"]%in%FormationData[,
 CleanedLocationWords<-gsub(","," ",LocationDeepDive[,"words"])
     
 # Search for country names in all LocationDeepDive documents
-CountryHits<-parSapply(Cluster, as.character(Countries),function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
+CountryHits<-parSapply(Cluster, as.character(Countries),function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedLocationWords)
 # Remove countries from CountryHits which have no matches in LocationDeepDive
 CountryCheck<-sapply(CountryHits, function(x) length(x)>0)
 CountryHits<-CountryHits[which(CountryCheck==TRUE)]
     
 # Extract the docids for the matches 
-CountryDocs<-sapply(CountryHits, function(x) unique(LocationDeepDive[x,"docid"]))
+CountryDocs<-sapply(CountryHits, function(x) LocationDeepDive[x,"docid"])
+# Extract the sentids for the matches 
+CountrySents<-sapply(CountryHits, function(x) LocationDeepDive[x,"sentid"])
 # Make a column of country names
-Country<-rep(names(CountryDocs), times= sapply(CountryDocs, length))
-# Make a column of docids
-docid<-unlist(CountryDocs)
-# Bind the columns
-CountryDocData<-cbind(Country, docid)
+Country<-rep(names(CountryHits), times= sapply(CountryHits, length))
+# Bind country, document, sentence thruples     
+CountryDocData<-cbind(Country,unlist(CountryDocs),unlist(CountrySents))
+# Assign column names 
+colnames(CountryDocData)<-c("country","docid","sentid")
     
 # Collapse countries that appear in each document to prepare for merge
 # Extract unique docids
 docid<-unique(CountryDocData[,"docid"])
 # Determine each country name that appears within each document
-Duplicatedocids<-parSapply(Cluster, docid, function(x,y) unique(y[which(y[,"docid"]==x),"Country"]), CountryDocData)
+Duplicatedocids<-parSapply(Cluster, docid, function(x,y) y[which(y[,"docid"]==x),"country"], CountryDocData)
 # Create a vector of collapsed country names associated with each docid
 CollapsedCountries<-parSapply(Cluster, Duplicatedocids, function(x) paste(x,collapse=","))
-CountryDocData<-cbind(names(CollapsedCountries), CollapsedCountries)    
-colnames(CountryDocData)<-c("docid","country")  
+# Extract each sentence id associated with each country match
+Duplicatedocids<-parSapply(Cluster, docid, function(x,y) y[which(y[,"docid"]==x),"sentid"], CountryDocData)
+# Create a vector of collapsed sentids associated with each country match in each docid
+CollapsedSents<-parSapply(Cluster, Duplicatedocids, function(x) paste(x,collapse=","))
+# Bind data    
+CountryDocData<-cbind(names(CollapsedCountries), CollapsedCountries, CollapsedSents)    
+colnames(CountryDocData)<-c("docid","country","sentid")  
 
-# Merge country document tuples to FormationData by docid
+# Merge country, document, sentid thruples to FormationData by docid
 FormationData<-merge(FormationData, CountryDocData, by="docid", all.x=TRUE)
 # Assign column names
-colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc")  
+colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc","country_sentid")  
 
 # Search for all admin names in LocationDeepDive
 # Add a space after all admin names to improve grep accuracy
 Admins2<-sapply(unique(Admins), function(x) paste(x, " ", sep=""))
-AdminHits<-parSapply(Cluster, Admins2, function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
+AdminHits<-parSapply(Cluster, Admins2, function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedLocationWords)
 # Remove admins from AdminHits which have no matches in LocationDeepDive
 AdminCheck<-sapply(AdminHits, function(x) length(x)>0)
 AdminHits<-AdminHits[which(AdminCheck==TRUE)]
-
+    
 # Extract the docids for the matches 
-AdminDocs<-sapply(AdminHits, function(x) unique(LocationDeepDive[x,"docid"]))
-# Make a column of admin names, and remove the space at the end of the admin names
-Admin<-rep(names(AdminDocs), times= sapply(AdminDocs, length))    
-Admin<-trimws(Admin, which="right")
-# Make a column of docids
-docid<-unlist(AdminDocs)
-# Bind the columns
-AdminDocData<-cbind(Admin, docid)
+AdminDocs<-sapply(AdminHits, function(x) LocationDeepDive[x,"docid"])
+# Extract the sentids for the matches 
+AdminSents<-sapply(AdminHits, function(x) LocationDeepDive[x,"sentid"])
+# Make a column of admin names
+Admin<-rep(names(AdminHits), times= sapply(AdminHits, length))
+# Bind admin, document, sentence thruples     
+AdminDocData<-cbind(Admin,unlist(AdminDocs),unlist(AdminSents))
+# Assign column names 
+colnames(AdminDocData)<-c("admin","docid","sentid")
 
 # Collapse admins that appear in each document to prepare for merge
 # Extract unique docids
 docid<-unique(AdminDocData[,"docid"])
 # Determine each admin name that appears within each document
-Duplicatedocids<-parSapply(Cluster, docid, function(x,y) unique(y[which(y[,"docid"]==x),"Admin"]), AdminDocData)
+Duplicatedocids<-parSapply(Cluster, docid, function(x,y) y[which(y[,"docid"]==x),"admin"], AdminDocData)
 # Create a vector of collapsed admin names associated with each docid
 CollapsedAdmins<-parSapply(Cluster, Duplicatedocids, function(x) paste(x,collapse=","))
-AdminDocData<-cbind(names(CollapsedAdmins), CollapsedAdmins)    
-colnames(AdminDocData)<-c("docid","admin")      
+# Extract each sentence id associated with each admin match
+Duplicatedocids<-parSapply(Cluster, docid, function(x,y) y[which(y[,"docid"]==x),"sentid"], AdminDocData)
+# Create a vector of collapsed sentids associated with each admin match in each docid
+CollapsedSents<-parSapply(Cluster, Duplicatedocids, function(x) paste(x,collapse=","))
+# Bind data    
+AdminDocData<-cbind(names(CollapsedAdmins), CollapsedAdmins, CollapsedSents)    
+colnames(AdminDocData)<-c("docid","admin","sentid")  
 
-# Merge admin document tuples to FormationData by docid
+# Merge admin, document, sentid thruples to FormationData by docid
 FormationData<-merge(FormationData, AdminDocData, by="docid", all.x=TRUE)
 # Assign column names
-colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc","admin_doc")  
-
+colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc","country_sentid","admin_doc","admin_sentid")  
 ########################################### Fossil Search Script #######################################     
 
 
