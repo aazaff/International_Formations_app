@@ -34,9 +34,9 @@ if (length(CommandArgument)==0) {
      }
 
 #############################################################################################################
-##################################### DATA DWONLOAD FUNCTIONS, FIDELITY #####################################
+##################################### DATA DOWNLOAD FUNCTIONS, FIDELITY #####################################
 #############################################################################################################
-# No funcitons at this time
+# No functions at this time
 
 ########################################### Data Download Script ############################################
 # print current status to terminal 
@@ -55,7 +55,7 @@ DeepDiveData<-dbGetQuery(Connection,"SELECT docid, sentid, words, poses FROM nlp
 # Download data from Postgres:
 #Driver <- dbDriver("PostgreSQL") # Establish database driver
 #Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
-#DeepDiveData<-dbGetQuery(Connection,"SELECT docid, words, poses FROM pbdb_fidelity.pbdb_fidelity_data")
+#DeepDiveData<-dbGetQuery(Connection,"SELECT docid, sentid, words, poses FROM pbdb_fidelity.pbdb_fidelity_data")
 
 # Record initial stats
 Description1<-"Initial Data"
@@ -88,6 +88,7 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
 #############################################################################################################
+# No functions at this time
 
 ########################################### Formation Search Script #########################################
 # print current status 
@@ -189,7 +190,7 @@ ClusterData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(ClusterData[,"SubsetD
 # Extract the sentences the associated SubsetDeepDive rows  
 ClusterSentences<-sapply(ClusterData[,"SubsetDeepDiveRow"], function (x) SubsetDeepDive[x,"words"])
 # Split and unlist the words in each cluster sentence
-ClusterSentencesSplit<-sapply(ClusterSentences,function(x) unlist(strsplit(as.character(x),",")))
+ClusterSentencesSplit<-parSapply(Cluster, ClusterSentences,function(x) unlist(strsplit(as.character(x),",")))
 # Extract the NNP Clusters from theh associate sentences 
 # Get numeric elements for each NNP Cluster word
 NNPElements<-lapply(ClusterData[,"ClusterPosition"],function(x) as.numeric(unlist(strsplit(x,","))))
@@ -348,12 +349,16 @@ FormationData[,"Formation"]<-gsub("Formations","Formation",FormationData[,"Forma
 print(paste("Search for age clusters",Sys.time()))
 # Find non-formation clusters
 PostFmClusters<-ClusterData[-FormationClusters,]
+# Make all NNPWords in PostFmClusters lower case
+PostFmClusters[,"NNPWords"]<-sapply(PostFmClusters[,"NNPWords"], tolower)
 
 # Search for geologic time interval names in clusters
 TimeURL<-getURL("https://macrostrat.org/api/defs/intervals?all&format=csv")
 Timescales<-read.csv(text=TimeURL)
 # Extract unique interval names
 Intervals<-as.character(unique(Timescales[,"name"]))
+# Make all intervals lower case
+Intervals<-tolower(Intervals)
 
 # Find NNP clusters containing interval names
 IntervalClusters<-parSapply(Cluster, Intervals, function(x,y) which(x==y), PostFmClusters[,"NNPWords"])
@@ -387,6 +392,9 @@ WorldCities<-read.csv("input/world_cities_province.csv")
 Countries<-unique(WorldCities[,"wc_country"])
 # Remove the blank country names
 Countries<-Countries[which(nchar(as.character(Countries))>0)]
+# Make all countries lower case
+Countries<-tolower(Countries)
+# Find NNP clusters containing formation names
 CountryClusters<-parSapply(Cluster, Countries, function(x,y) which(x==y), PostAgeClusters[,"NNPWords"])
 CountryData<-PostAgeClusters[unique(unlist(CountryClusters)),]
     
@@ -413,6 +421,9 @@ PostCountryClusters<-PostAgeClusters[-unique(unlist(CountryClusters)),]
 Admins<-unique(WorldCities[,"woe_name"])
 # Remove blank admins
 Admins<-Admins[which(nchar(as.character(Admins))>0)]
+# Make all admin names lower case
+Admins<-tolower(Admins)
+# Find NNP clusters containing admin names
 AdminClusters<-parSapply(Cluster, Admins, function(x,y) which(x==y), PostCountryClusters[,"NNPWords"])
 AdminData<-PostCountryClusters[unique(unlist(AdminClusters)),]
     
@@ -440,7 +451,12 @@ Cities<-as.character(unique(WorldCities[,"city_name"]))
 # Remove formation names that are identical to city names from the search
 BadCities<-gsub( " Formation", "", FormationData[,"Formation"])
 CleanCities<-Cities[which(Cities%in%BadCities==FALSE)]
-    
+# Remove the cities "Rock" and "Fossil"
+BadCities<-sapply(c("Rock","Fossil"), function(x,y) which(y==x), CleanCities)
+CleanCities<-CleanCities[-BadCities]
+# Change all city names to lower case
+CleanCities<-tolower(CleanCities)
+# Find all NNP clusters that are city names
 CityClusters<-parSapply(Cluster, CleanCities, function(x,y) which(x==y), PostAdminClusters[,"NNPWords"])
 CityData<-PostAdminClusters[unique(unlist(CityClusters)),]
     
