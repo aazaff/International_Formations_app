@@ -528,7 +528,11 @@ colnames(AdminDocData)<-c("docid","admin")
 FormationData<-merge(FormationData, AdminDocData, by="docid", all.x=TRUE)
 # Assign column names
 colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc","admin_doc")  
-    
+
+########################################### Fossil Search Script #######################################     
+
+
+
   
     
     
