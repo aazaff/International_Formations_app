@@ -373,7 +373,7 @@ PostAgeClusters<-PostFmClusters[-unique(unlist(IntervalClusters)),]
 WorldCities<-read.csv("input/world_cities_province.csv")
 # Extract unique country names
 Countries<-unique(WorldCities[,"wc_country"])
-# Remove the blank country name
+# Remove the blank country names
 Countries<-Countries[which(nchar(as.character(Countries))>0)]
 CountryClusters<-parSapply(Cluster, Countries, function(x,y) which(x==y), PostAgeClusters[,"NNPWords"])
 CountryData<-PostAgeClusters[unique(unlist(CountryClusters)),]
@@ -399,6 +399,8 @@ PostCountryClusters<-PostAgeClusters[-unique(unlist(CountryClusters)),]
     
 # Search for province/state names in clusters
 Admins<-unique(WorldCities[,"woe_name"])
+# Remove blank admins
+Admins<-Admins[which(nchar(as.character(Admins))>0)]
 AdminClusters<-parSapply(Cluster, Admins, function(x,y) which(x==y), PostCountryClusters[,"NNPWords"])
 AdminData<-PostCountryClusters[unique(unlist(AdminClusters)),]
     
@@ -451,11 +453,11 @@ PostCityClusters<-PostAdminClusters[-unique(unlist(CityClusters)),]
 FormationData<-merge(FormationData, IntervalData[,c("SubsetDeepDiveRow", "CollapsedIntervals")], by="SubsetDeepDiveRow", all.x=TRUE)
 FormationData<-merge(FormationData, CountryData[,c("SubsetDeepDiveRow", "CollapsedCountries")], by="SubsetDeepDiveRow", all.x=TRUE)
 FormationData<-merge(FormationData, AdminData[,c("SubsetDeepDiveRow", "CollapsedAdmins")], by="SubsetDeepDiveRow", all.x=TRUE)
-FormationData<-merge(FormationData, CityData[,c("SubsetDeepDiveRow", "CollapsedCities")], by="SubsetDeepDiveRow", all.x=TRUE)
-
+FormationData<-merge(FormationData, CityData[,c("SubsetDeepDiveRow", "CollapsedCities")], by="SubsetDeepDiveRow", all.x=TRUE)    
+    
 # Assign column names
 colnames(FormationData)<-c("SubsetDeepDiveRow","Formation","ClusterPosition","docid","sentid","age","country","admin","city")
-    
+
 # STEP SEVENTEEN:
 print(paste("Search for countries, admins, and cities in documents",Sys.time()))
 
@@ -463,6 +465,7 @@ print(paste("Search for countries, admins, and cities in documents",Sys.time()))
 LocationDeepDive<-subset(DeepDiveData, DeepDiveData[,"docid"]%in%FormationData[,"docid"])
 # Clean LocationDeepDive words column to prepare for grep
 CleanedLocationWords<-gsub(","," ",LocationDeepDive[,"words"])
+    
 # Search for country names in all LocationDeepDive documents
 CountryHits<-parSapply(Cluster, as.character(Countries),function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
 # Remove countries from CountryHits which have no matches in LocationDeepDive
@@ -478,10 +481,56 @@ docid<-unlist(CountryDocs)
 # Bind the columns
 CountryDocData<-cbind(Country, docid)
     
- # Search for state names in CleanedLocationWords
-    
+# Collapse countries that appear in each document to prepare for merge
+# Extract unique docids
+docid<-unique(CountryDocData[,"docid"])
+# Determine each country name that appears within each document
+Duplicatedocids<-parSapply(Cluster, docid, function(x,y) unique(y[which(y[,"docid"]==x),"Country"]), CountryDocData)
+# Create a vector of collapsed country names associated with each docid
+CollapsedCountries<-parSapply(Cluster, Duplicatedocids, function(x) paste(x,collapse=","))
+CountryDocData<-cbind(names(CollapsedCountries), CollapsedCountries)    
+colnames(CountryDocData)<-c("docid","country")  
 
-# Extract the documents each state is found in 
+# Merge country document tuples to FormationData by docid
+FormationData<-merge(FormationData, CountryDocData, by="docid", all.x=TRUE)
+# Assign column names
+colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc")  
+
+# Search for all admin names in LocationDeepDive
+# Add a space after all admin names to improve grep accuracy
+Admins2<-sapply(unique(Admins), function(x) paste(x, " ", sep=""))
+AdminHits<-parSapply(Cluster, Admins2, function(x,y) grep(x,y,ignore.case=FALSE, perl = TRUE),CleanedLocationWords)
+# Remove admins from AdminHits which have no matches in LocationDeepDive
+AdminCheck<-sapply(AdminHits, function(x) length(x)>0)
+AdminHits<-AdminHits[which(AdminCheck==TRUE)]
+
+# Extract the docids for the matches 
+AdminDocs<-sapply(AdminHits, function(x) unique(LocationDeepDive[x,"docid"]))
+# Make a column of admin names, and remove the space at the end of the admin names
+Admin<-rep(names(AdminDocs), times= sapply(AdminDocs, length))    
+Admin<-trimws(Admin, which="right")
+# Make a column of docids
+docid<-unlist(AdminDocs)
+# Bind the columns
+AdminDocData<-cbind(Admin, docid)
+
+# Collapse admins that appear in each document to prepare for merge
+# Extract unique docids
+docid<-unique(AdminDocData[,"docid"])
+# Determine each admin name that appears within each document
+Duplicatedocids<-parSapply(Cluster, docid, function(x,y) unique(y[which(y[,"docid"]==x),"Admin"]), AdminDocData)
+# Create a vector of collapsed admin names associated with each docid
+CollapsedAdmins<-parSapply(Cluster, Duplicatedocids, function(x) paste(x,collapse=","))
+AdminDocData<-cbind(names(CollapsedAdmins), CollapsedAdmins)    
+colnames(AdminDocData)<-c("docid","admin")      
+
+# Merge admin document tuples to FormationData by docid
+FormationData<-merge(FormationData, AdminDocData, by="docid", all.x=TRUE)
+# Assign column names
+colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc","admin_doc")  
+    
+  
+    
     
     
     
