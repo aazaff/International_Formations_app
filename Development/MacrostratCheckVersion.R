@@ -575,28 +575,90 @@ colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosit
 #############################################################################################################
 # No functions at this time
 
-########################################### Formation Search Script #########################################
-
+########################################### Fossil Search Script #########################################
+print(paste("Begin fossil search",Sys.time()))
 # Extract FormationData SubsetDeepDive rows for grep search
 FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"]) 
 # Clean the sentences to prepare for grep
 CleanedWords<-gsub(","," ",FormationSentences)
 # Replace all periods in CleanedWords with spaces to avoid grep errors
 CleanedWords<-gsub("\\."," ",CleanedWords)
-
   
 # Search for the word " fossil" in CleanedWords
-FossilHits<-parSapply(Cluster," fossil",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
+FossilHits<-grep(" fossil", ignore.case=TRUE, perl=TRUE, CleanedWords)
 
+#Search for and remove words that create noise in the data ("underlying","overlying","overlain", "overlie", "overlies", "underlain", "underlie", and "underlies")
+print(paste("Begin search for unwanted matches.",Sys.time()))
+# NOTE: removing "underlie" and "overlie" should also get rid of "underlies" and "overlies"
+Overlain<-grep("overlain", CleanedWords, ignore.case=TRUE, perl=TRUE)
+Overlie<-grep("overlie", CleanedWords, ignore.case=TRUE, perl=TRUE)
+Overlying<-grep("overlying", CleanedWords, ignore.case=TRUE, perl=TRUE)
+Underlain<-grep("underlain", CleanedWords, ignore.case=TRUE, perl=TRUE)
+Underlie<-grep("underlie", CleanedWords, ignore.case=TRUE, perl=TRUE)
+Underlying<-grep("underlying", CleanedWords, ignore.case=TRUE, perl=TRUE)
+Beneath<-grep("beneath", CleanedWords, ignore.case=TRUE, perl=TRUE)
+  
+# Combine all of the noisy rows (sentences) into one vector 
+NoisySentences<-c(Overlain,Overlie,Underlain,Underlie,Underlying,Overlying,Beneath)
     
+# Create a new column of formation fossil occurrences
+Fossil<-rep(NA,nrow(FormationData))
+FormationData<-cbind(FormationData, Fossil)
     
-    
+# Assign TRUE to all FormationData sentences which contain the word fossil, and do NOT contain a noisy word
+FossilRows<-FossilHits[which(!(FossilHits%in%NoisySentences))]
+FormationData[FossilRows,"Fossil"]<-"TRUE"
+# Assign FALSE to all FormationData sentences which do not contain the word fossil
+NoFossilRows<-which(!(1:nrow(FormationData)%in%FossilHits))
+FormationData[NoFossilRows,"Fossil"]<-"FALSE"
 
+print(paste("Add sentence uniqueness column",Sys.time()))
+# Add column which tells whether not sentence only appears once in FormationData
+# NOTE: this tells whether or not more than one formation occurrs in a sentence
+Unique<-rep(NA,nrow(FormationData))
+FormationData<-cbind(FormationData,Unique)
     
+# Determine which sentences appear multiple times in the FormationData frame
+# Determine which SubsetDeepDive row values appear more than once and extract them
+DuplicateRows<-unique(FormationData[duplicated(FormationData[,"SubsetDeepDiveRow"]),"SubsetDeepDiveRow"])
+# Determine which FormationData rows are associated with the duplicated SubsetDeepDive row duplicates
+FormationDataDuplicates<-which(FormationData[,"SubsetDeepDiveRow"]%in%DuplicateRows)    
+# Assign "FALSE" in the unique column to all of the duplicate sentences
+FormationData[FormationDataDuplicates,"Unique"]<-"FALSE"
+# Assign "TRUE" to the rest of the sentences
+FormationData[which(is.na(FormationData[,"Unique"])),"Unique"]<-"TRUE"
     
+# Bind sentences to FormationData
+FormationData<-cbind(FormationData,CleanedWords)
+
+# Write outputs
+print(paste("Writing Outputs",Sys.time()))
+   
+# Return formation stats table  
+StepDescription<-c(Description1, Description2, Description3, Description4, Description5, Description6, Description7, Description8)
+NumberDocuments<-c(Docs1, Docs2, Docs3, Docs4, Docs5, Docs6, Docs7, Docs8)
+NumberRows<-c(Rows1, Rows2, Rows3, Rows4, Rows5, Rows6, Rows7,Rows8)
+NumberClusters<-c(Clusters1, Clusters2, Clusters3, Clusters4, Clusters5, Clusters6, Clusters7, Clusters8) 
+# Bind formation stats columns
+Stats<-cbind(StepDescription,NumberDocuments,NumberRows,NumberClusters)  
+
+# Set directory for output
+CurrentDirectory<-getwd()
+setwd(paste(CurrentDirectory,"/output",sep=""))
     
+# Clear any old output files
+unlink("*")
+
+# Write csv output files
+write.csv(PostFmClusters, "PostFmClusters.csv")
+write.csv(FormationData, "FormationData.csv")
+write.csv(Stats, "Stats.csv")
     
-    
+# Stop the cluster
+stopCluster(Cluster)
+
+# COMPLETE
+print(paste("Complete",Sys.time()))     
     
     
     
