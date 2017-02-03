@@ -94,7 +94,7 @@ findConsecutive<-function(DeepDivePoses) {
                             
 # Extract subset deepdive rows
 pullSents<-function(Hashes=ClusterData,Sentences=SubsetDeepDive) {
-    FinalMatrix<-data.frame(matrix(NA,nrow=nrow(Hashes),ncol=ncol(Sentences),dimnames=list(rownames(Hashes),colnames(Hashes))))
+    FinalMatrix<-data.frame(matrix(NA,nrow=nrow(Hashes),ncol=ncol(Sentences),dimnames=list(rownames(Hashes),colnames(Sentences))))
     for (i in 1:nrow(Hashes)) {
         FinalMatrix[i,]<-Sentences[which(Sentences[,"docid"]==Hashes[i,"docid"] & Sentences[,"sentid"]==as.numeric(Hashes[i,"sentid"])),]
         }
