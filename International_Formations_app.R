@@ -49,7 +49,7 @@ DeepDiveData<-dbGetQuery(Connection,"SELECT docid, sentid, words, poses FROM nlp
 # Download data from Postgres:
 #Driver <- dbDriver("PostgreSQL") # Establish database driver
 #Connection <- dbConnect(Driver, dbname = "labuser", host = "localhost", port = 5432, user = "labuser")
-#DeepDiveData<-dbGetQuery(Connection,"SELECT docid, words, poses FROM pbdb_fidelity.pbdb_fidelity_data")
+#DeepDiveData<-dbGetQuery(Connection,"SELECT docid, sentid, words, poses FROM pbdb_fidelity.pbdb_fidelity_data")
 
 # Record initial stats
 Description1<-"Initial Data"
