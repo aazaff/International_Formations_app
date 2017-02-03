@@ -59,7 +59,7 @@ print(paste("Search for the word ' formation' in DeepDiveData sentences",Sys.tim
 
 # Apply grep to the object cleaned words
 #FormationHits<-parSapply(Cluster," formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
-FormationHits<-sapply(" formation",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
+FormationHits<-grep(" formation", ignore.case=TRUE, perl = TRUE, CleanedDDWords)
 # Extact DeepDiveData rows corresponding with formation hits
 SubsetDeepDive<-DeepDiveData[FormationHits,]
 
