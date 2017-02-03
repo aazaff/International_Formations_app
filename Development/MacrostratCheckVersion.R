@@ -43,7 +43,7 @@ if (length(CommandArgument)==0) {
 print(paste("Load postgres tables",Sys.time()))
 
 # IF reading data from csv file:
-DeepDiveData<-as.data.frame(read.csv("input/nlp_sentences_352.csv", stringsAsFactors=FALSE))
+DeepDiveData<-as.data.frame(read.csv("input/DeepDiveData.csv", stringsAsFactors=FALSE))
 
 # If RUNNING FROM UW-MADISON:
 # Download the config file
