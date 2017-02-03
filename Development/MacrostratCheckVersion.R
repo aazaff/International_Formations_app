@@ -569,12 +569,25 @@ colnames(AdminDocData)<-c("docid","admin","sentid")
 FormationData<-merge(FormationData, AdminDocData, by="docid", all.x=TRUE)
 # Assign column names
 colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosition","sentid","age","country","admin","city","country_doc","country_sentid","admin_doc","admin_sentid")  
-########################################### Fossil Search Script #######################################     
 
+#############################################################################################################
+###################################### FOSSIL SEARCH FUNCTIONS, FIDELITY ####################################
+#############################################################################################################
+# No functions at this time
 
+########################################### Formation Search Script #########################################
+
+# Extract FormationData SubsetDeepDive rows for grep search
+FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"]) 
+# Clean the sentences to prepare for grep
+CleanedWords<-gsub(","," ",FormationSentences)
+# Replace all periods in CleanedWords with spaces to avoid grep errors
+CleanedWords<-gsub("\\."," ",CleanedWords)
 
   
-    
+# Search for the word " fossil" in CleanedWords
+FossilHits<-parSapply(Cluster," fossil",function(x,y) grep(x,y,ignore.case=TRUE, perl = TRUE),CleanedDDWords)
+
     
     
     
@@ -618,18 +631,8 @@ colnames(FormationData)<-c("docid","SubsetDeepDiveRow","Formation","ClusterPosit
 # Add a space at the end of all city names and admin titles to improve grep accuracy
 #Cities[,"city"]<-paste(Cities[,"city"]," ",sep="")
    
-# Extract FormationData SubsetDeepDive rows for grep search
-#FormationSentences<-sapply(FormationData[,"SubsetDeepDiveRow"], function(x) SubsetDeepDive[x,"words"])
-# Only search sentences which are less than or equal to 350 characters in length
-#ShortSentences<-which(sapply(FormationSentences, function(x) nchar(x)<=350))
-#FormationSentences<-FormationSentences[ShortSentences]
-# Subset FormationData to only include short sentences
-#SubsetFormData<-FormationData[ShortSentences,]
     
-# Clean the sentences to prepare for grep
-#CleanedWords<-gsub(","," ",FormationSentences)
-# Replace all periods in CleanedWords with spaces to avoid grep errors
-#CleanedWords<-gsub("\\."," ",CleanedWords)
+
     
 # Search for cities: 
 #CityHits<-parSapply(Cluster, Cities[,"city"], function(x,y) grep(x, y, perl=TRUE, ignore.case=FALSE), CleanedWords)    
