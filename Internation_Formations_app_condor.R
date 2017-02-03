@@ -199,6 +199,9 @@ FormationClusters<-grep(" formation",ClusterData[,"NNPWords"],ignore.case=TRUE,p
 # Extract those rows from ClusterData
 FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
+  
+# Find non-formation clusters for output
+PostFmClusters<-ClusterData[-FormationClusters,]
     
 # Update the stats table
 Description5<-"Extract NNP clusters containing the word 'formation'"
@@ -335,7 +338,8 @@ setwd(paste(CurrentDirectory,"/output",sep=""))
 # Clear any old output files
 unlink("*")
 
-# Write output files
+# Write output csv files
+write.csv(PostFmClusters, "PostFmClusters.csv")
 write.csv(FormationData, "FormationData.csv")
 write.csv(Stats, "Stats.csv")
     
