@@ -43,16 +43,16 @@ if (length(CommandArgument)==0) {
 print(paste("Load postgres tables",Sys.time()))
 
 # IF reading data from csv file:
-# DeepDiveData<-as.data.frame(read.csv("input/DeepDiveData.csv", stringsAsFactors=FALSE))
+DeepDiveData<-as.data.frame(read.csv("nlp_sentences_3522.csv", stringsAsFactors=FALSE))
 
 # If RUNNING FROM UW-MADISON:
 # Download the config file
-Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
+#Credentials<-as.matrix(read.table("Credentials.yml",row.names=1))
 # Connect to PostgreSQL
-Driver <- dbDriver("PostgreSQL") # Establish database driver
-Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
+#Driver <- dbDriver("PostgreSQL") # Establish database driver
+#Connection <- dbConnect(Driver, dbname = Credentials["database:",], host = Credentials["host:",], port = Credentials["port:",], user = Credentials["user:",])
 # Query the sentences fro postgresql
-DeepDiveData<-dbGetQuery(Connection,"SELECT docid, sentid, words, poses FROM nlp_sentences_352") 
+#DeepDiveData<-dbGetQuery(Connection,"SELECT docid, sentid, words, poses FROM nlp_sentences_352") 
 
 # IF TESTING IN 402:
 # Download data from Postgres:
