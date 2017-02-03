@@ -452,8 +452,8 @@ Cities<-as.character(unique(WorldCities[,"city_name"]))
 BadCities<-gsub( " Formation", "", FormationData[,"Formation"])
 CleanCities<-Cities[which(Cities%in%BadCities==FALSE)]
 # Remove the cities "Rock" and "Fossil"
-BadCities<-sapply(c("Rock","Fossil"), function(x,y) which(y==x), CleanCities)
-CleanCities<-CleanCities[-BadCities]
+CleanCities<-subset(CleanCities, CleanCities!="Rock")
+CleanCities<-subset(CleanCities, CleanCities!="Fossil")   
 # Change all city names to lower case
 CleanCities<-tolower(CleanCities)
 # Find all NNP clusters that are city names
