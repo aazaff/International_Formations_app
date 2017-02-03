@@ -223,12 +223,15 @@ FormationClusters<-grep(" formation",ClusterData[,"NNPWords"],ignore.case=TRUE,p
 FormationData<-ClusterData[FormationClusters,]
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
     
+# Find non-formation clusters
+PostFmClusters<-ClusterData[-FormationClusters,]
+    
 # Update the stats table
 Description5<-"Extract NNP clusters containing the word 'formation'"
 # Record number of documents and rows in SubsetDeepDive:
 Docs5<-length(unique(FormationData[,"docid"]))
 Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
-Clusters5<-nrow(FormationData)
+Clusters5<-nrow(FormationData)  
     
 # print current status to terminal
 print(paste("Capitalize formation names appropriately",Sys.time()))
@@ -338,7 +341,7 @@ print(paste("Writing Outputs",Sys.time()))
 # Extract columns of interest for the output
 FormationData<-FormationData[,c("Formation","docid","sentid")]
    
-# Return formation stats table 
+# Return formation stats table  
 StepDescription<-c(Description1, Description2, Description3, Description4, Description5, Description6, Description7, Description8)
 NumberDocuments<-c(Docs1, Docs2, Docs3, Docs4, Docs5, Docs6, Docs7, Docs8)
 NumberRows<-c(Rows1, Rows2, Rows3, Rows4, Rows5, Rows6, Rows7,Rows8)
@@ -353,8 +356,8 @@ setwd(paste(CurrentDirectory,"/output",sep=""))
 # Clear any old output files
 unlink("*")
 
-# Write output files
-saveRDS(FormationData, "FormationData.rds")
+# Write csv output files
+write.csv(PostFmClusters, "PostFmClusters.csv")
 write.csv(FormationData, "FormationData.csv")
 write.csv(Stats, "Stats.csv")
     
