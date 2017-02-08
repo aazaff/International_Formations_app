@@ -82,7 +82,6 @@ CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
 #############################################################################################################
-# No functions at this time.
 
 ########################################### Formation Search Script #########################################
 # print current status 
@@ -132,9 +131,8 @@ print(paste("Extract NNPs from SubsetDeepDive rows",Sys.time()))
 
 # Create a list of vectors showing each formation hit sentence's unlisted poses column 
 DeepDivePoses<-parSapply(Cluster, SubsetDeepDive[,"poses"],function(x) unlist(strsplit(as.character(x)," ")))
-# Assign names to each list element corresponding to the document and sentence id of each sentence
-doc.sent<-paste(SubsetDeepDive[,"docid"],SubsetDeepDive[,"sentid"],sep=".")
-names(DeepDivePoses)<-doc.sent
+# Assign names to each list element corresponding to the row in SubsetDeepDive
+names(DeepDivePoses)<-1:nrow(SubsetDeepDive)
 
 # Extract all the NNPs from DeepDivePoses
 # NOTE: Search for CC as to get hits like "Middendorf And Black Creek Formations" which is NNP, CC, NNP, NNP, NNP
@@ -156,33 +154,26 @@ print(paste("Find words Associated with Conescutive NNPs",Sys.time()))
 ClusterPosition<-unlist(SentenceNNPs)
 # Make a column for sentence IDs
 ClusterCount<-sapply(SentenceNNPs,length)
-# Repeat the document & sentence ID info (denoted in the names of SentenceNNPs) by the number of NNP clusters in each sentence
-DocSentID<-rep(names(SentenceNNPs),times=ClusterCount)
-SplitDocSent<-strsplit(DocSentID,'\\.') 
-# Create docid column for each cluster
-docid<-sapply(SplitDocSent,function(x) x[1])
-# make a sentid column for each cluster
-sentid<-as.numeric(sapply(SplitDocSent,function(x) x[2]))    
-# Bind cluster position data with document/sentence id data
-ClusterData<-as.data.frame(cbind(ClusterPosition,docid,sentid))
+# Repeat the SubsetDeepDive row number (denoted in the names of SentenceNNPs) by the number of NNP clusters in each sentence
+SubsetDDRow<-rep(names(SentenceNNPs),times=ClusterCount)
+# Bind cluster position data with the row number data
+ClusterData<-as.data.frame(cbind(ClusterPosition,SubsetDDRow))
+# Reformat the data
+ClusterData[,"SubsetDDRow"]<-as.numeric(as.character(ClusterData[,"SubsetDDRow"]))
 # Remove NA's from ClusterData
 ClusterData<-ClusterData[which(ClusterData[,"ClusterPosition"]!="NA"),]
+# Create columns for docid and sentid data for each cluster
+docid<-SubsetDeepDive[ClusterData[,"SubsetDDRow"],"docid"]
+sentid<-SubsetDeepDive[ClusterData[,"SubsetDDRow"],"sentid"]
+# Bind the data to the data frame
+ClusterData<-cbind(ClusterData, docid, sentid)
 # Reformat ClusterData
 ClusterData[,"ClusterPosition"]<-as.character(ClusterData[,"ClusterPosition"])
 ClusterData[,"docid"]<-as.character(ClusterData[,"docid"])
 ClusterData[,"sentid"]<-as.numeric(as.character(ClusterData[,"sentid"]))
-    
-# Make a column for the words associated with each NNP
-# Create a vector of the number of rows in ClusterData.
-NumClusterVector<-1:nrow(ClusterData)   
-# Extract the proper SubsetDeepDive rows based on the data in ClusterData    
-SubsetDeepDiveRow<-parSapply(Cluster, NumClusterVector,function(x) which(SubsetDeepDive[,"docid"]==ClusterData[x,"docid"]&SubsetDeepDive[,"sentid"]==ClusterData[x,"sentid"]))
-# Bind row data to ClusterData and convert it into a dataframe
-ClusterData<-cbind(ClusterData,SubsetDeepDiveRow)
-ClusterData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(ClusterData[,"SubsetDeepDiveRow"]))
  
 # Extract the sentences the associated SubsetDeepDive rows  
-ClusterSentences<-sapply(ClusterData[,"SubsetDeepDiveRow"], function (x) SubsetDeepDive[x,"words"])
+ClusterSentences<-sapply(ClusterData[,"SubsetDDRow"], function (x) SubsetDeepDive[x,"words"])
 # Split and unlist the words in each cluster sentence
 ClusterSentencesSplit<-sapply(ClusterSentences,function(x) unlist(strsplit(as.character(x),",")))
 # Extract the NNP Clusters from theh associate sentences 
@@ -201,7 +192,7 @@ ClusterData[,"NNPWords"]<-NNPWords
 Description4<-"Extract NPP clusters from SubsetDeepDive rows"
 # Record number of documents and rows in SubsetDeepDive:
 Docs4<-length(unique(ClusterData[,"docid"]))
-Rows4<-length(unique(ClusterData[,"SubsetDeepDiveRow"]))
+Rows4<-length(unique(ClusterData[,"SubsetDDRow"]))
 Clusters4<-nrow(ClusterData)
 
 #############################################################################################################
@@ -231,7 +222,7 @@ PostFmClusters<-ClusterData[-FormationClusters,]
 Description5<-"Extract NNP clusters containing the word 'formation'"
 # Record number of documents and rows in SubsetDeepDive:
 Docs5<-length(unique(FormationData[,"docid"]))
-Rows5<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Rows5<-length(unique(FormationData[,"SubsetDDRow"]))
 Clusters5<-nrow(FormationData)  
     
 # print current status to terminal
@@ -274,7 +265,7 @@ FormationData<-FormationData[-which(FormationData[,"NNPWords"]=="Formation"),]
 Description6<-"Remove rows that are just the word 'Formation'"
 # Record number of documents and rows in SubsetDeepDive:
 Docs6<-length(unique(FormationData[,"docid"]))
-Rows6<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Rows6<-length(unique(FormationData[,"SubsetDDRow"]))
 Clusters6<-nrow(FormationData)        
        
 # STEP THIRTEEN: Split the NNPClusters where there is an "And"
@@ -284,15 +275,15 @@ SplitFormationsClean<-sapply(SplitFormations,function(x) unlist(x)[unlist(x)!=""
 # SplitFormations is a list of the split clusters. Figure out which clusters were split at "And" using length.
 SplitCount<-sapply(SplitFormationsClean,length)
 # Repeat the data in FormationData for each split cluster by its length
-SubsetDeepDiveRow<-rep(FormationData[,"SubsetDeepDiveRow"],time=SplitCount)
+SubsetDDRow<-rep(FormationData[,"SubsetDDRow"],time=SplitCount)
 ClusterPosition<-rep(FormationData[,"ClusterPosition"],times=SplitCount) 
 docid<-rep(FormationData[,"docid"],times=SplitCount) 
 sentid<-rep(FormationData[,"sentid"],times=SplitCount)
 # Make a column for the split formations
 Formation<-unlist(SplitFormationsClean)
-FormationData<-as.data.frame(cbind(Formation,SubsetDeepDiveRow,ClusterPosition,docid,sentid))
+FormationData<-as.data.frame(cbind(Formation,SubsetDDRow,ClusterPosition,docid,sentid))
 # Reformat data
-FormationData[,"SubsetDeepDiveRow"]<-as.numeric(as.character(FormationData[,"SubsetDeepDiveRow"]))
+FormationData[,"SubsetDDRow"]<-as.numeric(as.character(FormationData[,"SubsetDDRow"]))
 FormationData[,"Formation"]<-as.character(FormationData[,"Formation"])
 FormationData[,"ClusterPosition"]<-as.character(FormationData[,"ClusterPosition"])
 FormationData[,"docid"]<-as.character(FormationData[,"docid"])
@@ -308,7 +299,7 @@ FormationData[-FormationHalves,"Formation"]<-paste(FormationData[-FormationHalve
 Description7<-"Split NNPClusters at 'And'"
 # Record number of documents and rows in SubsetDeepDive:
 Docs7<-length(unique(FormationData[,"docid"]))
-Rows7<-length(unique(FormationData[,"SubsetDeepDiveRow"]))
+Rows7<-length(unique(FormationData[,"SubsetDDRow"]))
 Clusters7<-nrow(FormationData)
   
 # STEP FOURTEEN: Remove Formations that equal to 1 word in length or more than 5 words in length.
