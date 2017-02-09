@@ -70,6 +70,9 @@ print(paste("Clean DeepDiveData",Sys.time()))
 # Remove bracket symbols ({ and }) from DeepDiveData sentences
 DeepDiveData[,"words"]<-gsub("\\{|\\}","",DeepDiveData[,"words"])
 
+# Replace "Fm" with "Formation" in words column
+DeepDiveData[,"words"]<-gsub(",Fm,",",Formation,",DeepDiveData[,"words"])
+
 # Remove bracket symbols ({ and }) from DeepDiveData poses column
 DeepDiveData[,"poses"]<-gsub("\\{|\\}","",DeepDiveData[,"poses"])
 
