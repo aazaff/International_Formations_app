@@ -79,6 +79,9 @@ DeepDiveData[,"poses"]<-gsub(","," ",DeepDiveData[,"poses"])
 # Remove commas from DeepDiveData to prepare to run grep function
 CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 
+# Replace instances of "Fm" with "Formation"
+CleanedDDWords<-gsub("Fm", "Formation", CleanedDDWords)
+
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
 #############################################################################################################
