@@ -167,10 +167,12 @@ docid<-SubsetDeepDive[ClusterData[,"SubsetDDRow"],"docid"]
 sentid<-SubsetDeepDive[ClusterData[,"SubsetDDRow"],"sentid"]
 # Bind the data to the data frame
 ClusterData<-cbind(ClusterData, docid, sentid)
+    
 # Reformat ClusterData
 ClusterData[,"ClusterPosition"]<-as.character(ClusterData[,"ClusterPosition"])
 ClusterData[,"docid"]<-as.character(ClusterData[,"docid"])
 ClusterData[,"sentid"]<-as.numeric(as.character(ClusterData[,"sentid"]))
+ClusterData[,"SubsetDDRow"]<-as.numeric(as.character(ClusterData[,"SubsetDDRow"]))
  
 # Extract the sentences for the associated SubsetDeepDive rows  
 ClusterSentences<-sapply(ClusterData[,"SubsetDDRow"], function (x) SubsetDeepDive[x,"words"])
