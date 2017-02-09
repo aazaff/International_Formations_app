@@ -172,7 +172,7 @@ ClusterData[,"ClusterPosition"]<-as.character(ClusterData[,"ClusterPosition"])
 ClusterData[,"docid"]<-as.character(ClusterData[,"docid"])
 ClusterData[,"sentid"]<-as.numeric(as.character(ClusterData[,"sentid"]))
  
-# Extract the sentences the associated SubsetDeepDive rows  
+# Extract the sentences for the associated SubsetDeepDive rows  
 ClusterSentences<-sapply(ClusterData[,"SubsetDDRow"], function (x) SubsetDeepDive[x,"words"])
 # Split and unlist the words in each cluster sentence
 ClusterSentencesSplit<-sapply(ClusterSentences,function(x) unlist(strsplit(as.character(x),",")))
