@@ -52,7 +52,7 @@ DeepDiveData[,"poses"]<-gsub(","," ",DeepDiveData[,"poses"])
 CleanedDDWords<-gsub(","," ",DeepDiveData[,"words"])
 
 # Replace instances of "Fm" with "Formation"
-CleanedDDWords<-gsub("Fm", "Formation", CleanedDDWords)
+CleanedDDWords<-gsub(" Fm", " Formation", CleanedDDWords)
 
 #############################################################################################################
 ###################################### FORMATION SEARCH FUNCTIONS, FIDELITY #################################
