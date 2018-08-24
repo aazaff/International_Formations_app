@@ -15,7 +15,7 @@ email: erika.ito@outlook.com
 language: R 3.3.1
 
 # The NLP product to run the application against (NLP, NLP352, OCR, Cuneiform -- see input/README for more info)
-product: NLP352, docid_terms
+product: NLP352 (docid,sentid,poses,words)
 
 # How often the application should be run
 frequency: once
@@ -23,6 +23,7 @@ frequency: once
 # You can choose to specify a list of dictionaries, a list of terms, or both.
 # If both dictionaries and terms are provided, all terms in the dictionary PLUS
 # all listed terms will be used
+dictionary: Lithologies
 
 # A list of terms used to subset the corpus
 
